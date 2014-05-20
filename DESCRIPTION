@@ -1,0 +1,20 @@
+Package: corpustools
+Version: 0.100
+Date: 2014-05-20
+Title: tools for corpus analysis
+Author: Kasper Welbers & Wouter van Atteveldt
+Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
+Depends:
+    slam,
+    Matrix,
+    lda,
+    tm,
+    topicmodels,
+    RColorBrewer,
+    wordcloud
+Description: Several convenient functions for bag-of-word type text analysis
+    methods
+License: MIT
+URL: http://github.com/kasperwelbers/corpus-tools
+Roxygen: list(wrap = FALSE)
+
