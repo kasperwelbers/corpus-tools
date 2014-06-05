@@ -26,16 +26,16 @@ cast.sparse.matrix <- function(rows, columns, values=NULL) {
 
 #' Create a document term matrix from a list of tokens
 #' 
-#' Create a \code{\link{DocumentTermMatrix}} from a list of ids, terms, and frequencies. 
+#' Create a \code{\link{DocumentTermMatrix}} from a list of document ids, terms, and frequencies. 
 #' 
-#' @param ids a vector of document ids
-#' @param terms a vector of words of the same length as ids
+#' @param documents a vector of document names/ids
+#' @param terms a vector of words of the same length as documents
 #' @param freqs a vector of the frequency a a term in a document
 #' @return a document-term matrix  \code{\link{DocumentTermMatrix}}
 #' @export
-dtm.create <- function(ids, terms, freqs) {
+dtm.create <- function(documents, terms, freqs) {
   # remove NA terms
-  d = data.frame(ids=ids, terms=terms, freqs=freqs)
+  d = data.frame(ids=documents, terms=terms, freqs=freqs)
   if (sum(is.na(d$terms)) > 0) {
     warning("Removing ", sum(is.na(d$terms)), "rows with missing term names")
     d = d[!is.na(d$terms), ]

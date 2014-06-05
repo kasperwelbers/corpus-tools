@@ -13,7 +13,7 @@
 #' @param eta the eta parameter
 #' @return A fitted LDA model (see \code{\link{lda.collapsed.gibbs.sampler}})
 #' @export
-lda.fit <- function(dtm, K=50, num.iterations=100, alpha=50/K, eta=.01, burnin=100, compute.log.likelihood=F) {
+lda.fit <- function(dtm, K=50, num.iterations=250, alpha=50/K, eta=.01, burnin=250, compute.log.likelihood=F) {
   dtm = dtm[row_sums(dtm) > 0,col_sums(dtm) > 0]
   x = dtm2ldaformat(dtm)
   m = lda.collapsed.gibbs.sampler(x$documents, vocab=x$vocab, K=K, num.iterations=num.iterations, 
@@ -72,7 +72,7 @@ lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='d
     lda.plot.topic(m, topic_nr, time_var, category_var, date_interval)
     if (!is.null(fn)) dev.off()
   }
-  par(mfrow=c(1,1))
+  par(mfrow=c(1,1), mar=c(3,3,3,3))
 }
 
 #' Plots topic wordcloud, and attention over time and per category
@@ -94,7 +94,7 @@ lda.plot.topic <- function(m, topic_nr, time_var, category_var, date_interval='d
   lda.plot.time(m, topic_nr, time_var, date_interval, pct=pct, value=value)
   lda.plot.wordcloud(m, topic_nr)
   lda.plot.category(m, topic_nr, category_var, pct=pct, value=value)
-  par(mfrow=c(1,1))
+  par(mfrow=c(1,1), mar=c(3,3,3,3))
 }
 
 #' Change date object to date_interval
@@ -181,6 +181,7 @@ lda.plot.time <- function(m, topic_nr, time_var, date_interval='day', pct=F, val
   colnames(d) = c('time','value')
   d = fill.time.gaps(d, date_interval)
   plot(d$time, d$value, type='l', xlab='', main='', ylab='', xlim=c(min(d$time), max(d$time)), ylim=c(0, max(d$value)), bty='L', lwd=5, col='darkgrey')
+  par(mar=c(3,3,3,3))
   if(return.values==T) d
 }
 
@@ -197,7 +198,7 @@ lda.plot.time <- function(m, topic_nr, time_var, date_interval='day', pct=F, val
 #' @return data.frame for plotted values
 #' @export
 lda.plot.category <- function(m, topic_nr, category_var, pct=F, value='total', return.values=F){
-  par(mar=c(15,0,1,2))
+  par(mar=c(15,3,1,2))
   d = prepare.plot.values(m, break_var=category_var, topic_nr=topic_nr, pct=pct, value=value)
   colnames(d) = c('category','value')
   barplot(as.matrix(t(d[,c('value')])), main='', beside=TRUE,horiz=FALSE,
@@ -206,6 +207,7 @@ lda.plot.category <- function(m, topic_nr, category_var, pct=F, value='total', r
           xlab='',
           ylab="",
           axes=T, names.arg=d$category, cex.names=0.8, cex.axis=0.8, adj=1, las=2)
+  par(mar=c(3,3,3,3))
   if(return.values==T) d
 }
 

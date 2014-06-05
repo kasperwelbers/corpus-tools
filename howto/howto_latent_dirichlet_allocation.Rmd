@@ -1,0 +1,85 @@
+```{r, include=FALSE}
+opts_chunk$set(fig.path = "figures_lda/")
+```
+
+Latent Dirichlet Allocation
+========================================================
+
+Topic modelling techniques such as Latent Dirichlet Allocation (LDA) can be a usefull tool for social scientists to analyze large amounts of natural language data. Algorithms for LDA are available in R, for instance in the `lda` package. In this howto we demonstrate several function in the `corpustools` package that we developed to facilitate the use of LDA, based on the `lda` package.
+
+As a starting point we use a Document Term Matrix (dtm) in the `DocumentTermMatrix` format offered in the `tm` package. Note that we also offer a howto for creating the dtm. 
+
+```{r}
+library(corpustools)
+load('wos_comsci_dtm.rdata') ## Abstracts in 10 communication sciences journals from Web of Science, with 'social network' as a topic, from 2000 till 2010
+dtm
+```
+
+Not all terms are equally informative of the underlying semantic structures of texts, and some terms are rather useless for this purpose. For interpretation and computational purposes it is worthwhile to delete some of the less usefull words from the dtm before fitting the LDA model. We offer the `term.statistics` function to get some basic information on the vocabulary (i.e. the total set of terms) of the corpus.
+
+```{r}
+termstats = term.statistics(dtm)
+termstats[sample(1:nrow(termstats), 10),]
+```
+
+We can now filter out words based on this information. In our example, we filter on terms that occur at least in two documents and that do not contain numbers. We also select only the 3000 terms with the highest tf-idf score (this is not a common standard. For large corpora it makes sense to include more terms). 
+
+```{r}
+termstats = termstats[termstats$docfreq > 1 & termstats$number==F,]
+voca = as.character(termstats[order(termstats$tfidf, decreasing=T),][1:3000,'term'])
+filtered_dtm = dtm[,voca] # select only the terms we want to keep
+```
+
+Now we are ready to fit the model! We made a wrapper called `lda.fit` for the `lda.collapsed.gibbs.sampler` function offered in the `lda` package. This wrapper performs two convenient steps in addition to fitting the model: 
+- It transforms the dtm to the input format required for lda.collapsed.gibbs.sampler (which is a bit unusual)
+- The output of `lda.collapsed.gibbs.sampler` does not contain the document ids, but only keeps the documents in the same order as the dtm. We therefore add the dtm to the output (which is a list of objects), so that it remains clear which documents are which. 
+
+The main input for `lda.fit` is:
+- the document term matrix
+- K: the number of topics (this has to be defined a priori)
+- Optionally, it can be usefull to increase the number of iterations. This takes more time, but increases performance (to some point)
+
+```{r}
+m = lda.fit(filtered_dtm, K=30, num.iterations=1000)
+top.topic.words(m$topics)[,1:4]
+```
+
+We now have a fitted lda model. The top.topic.words function shows the most prominent words for each topic (we only selected the first 4 topics for convenience). 
+
+One of the thing we can do with the LDA topics, is analyze how much attention they get over time, and how much they are used by different sources (e.g., people, newspapers, organizations). To do so, we need to match this article metadata. Since the output of `lda.fit` is already a list, we prefer to add this metadata to the list as well, so that we have everything we need neatly in one place. To do so, we can match vectors of metadata to the document ids contained in the dtm (as rownames)
+
+```{r}
+load('wos_comsci_meta.rdata')
+colnames(meta) # the id column matches the rownames of the dtm
+m$meta = meta[match(rownames(m$dtm), meta$id),]
+names(m)
+```
+
+We can now do some plotting. First, we can make a wordcloud for a more fancy (and actually quite informative and intuitive) representation of the top words of a topic.
+
+```{r, message=F, warning=FALSE, fig.width=6, fig.height=6}
+lda.plot.wordcloud(m, 1)
+```
+
+With `lda.plot.time` and `lda.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
+
+```{r}
+lda.plot.time(m, 1, m$meta$date, date_interval='month', value='relative')
+# Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
+```
+
+In our example data, we can use the names of the journals as categories. However, since there are so many journals, this becomes messy. We therefore only look at the top.10 most frequent journals (in our sample) and categorize the rest as `other`.
+
+```{r}
+lda.plot.category(m, 1, m$meta$journal.top10, value='relative')
+# Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
+```
+
+Finally, it can be usefull to print all this information together. That is what the following function does.
+
+```{r, message=F, warning=FALSE, fig.width=10, fig.height=10}
+lda.plot.topic(m, 1, m$meta$date, m$meta$journal.top10, date_interval='year', value='relative')
+lda.plot.topic(m, 2, m$meta$date, m$meta$journal.top10, date_interval='year', value='relative')
+lda.plot.topic(m, 10, m$meta$date, m$meta$journal.top10, date_interval='year', value='relative')
+```
+
