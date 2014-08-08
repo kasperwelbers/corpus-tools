@@ -3,12 +3,12 @@
 \alias{dtm.create}
 \title{Create a document term matrix from a list of tokens}
 \usage{
-dtm.create(ids, terms, freqs)
+dtm.create(documents, terms, freqs)
 }
 \arguments{
-\item{ids}{a vector of document ids}
+\item{documents}{a vector of document names/ids}
 
-\item{terms}{a vector of words of the same length as ids}
+\item{terms}{a vector of words of the same length as documents}
 
 \item{freqs}{a vector of the frequency a a term in a document}
 }
@@ -16,6 +16,6 @@ dtm.create(ids, terms, freqs)
 a document-term matrix  \code{\link{DocumentTermMatrix}}
 }
 \description{
-Create a \code{\link{DocumentTermMatrix}} from a list of ids, terms, and frequencies.
+Create a \code{\link{DocumentTermMatrix}} from a list of document ids, terms, and frequencies.
 }
 

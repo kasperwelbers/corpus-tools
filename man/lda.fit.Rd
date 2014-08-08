@@ -3,8 +3,8 @@
 \alias{lda.fit}
 \title{Estimate a topic model using the lda package}
 \usage{
-lda.fit(dtm, K = 50, num.iterations = 100, alpha = 50/K, eta = 0.01,
-  burnin = 100, compute.log.likelihood = F)
+lda.fit(dtm, K = 50, num.iterations = 250, alpha = 50/K, eta = 0.01,
+  burnin = 250, compute.log.likelihood = F)
 }
 \arguments{
 \item{dtm}{a document term matrix (e.g. the output of \code{\link{amcat.dtm.create}})}
