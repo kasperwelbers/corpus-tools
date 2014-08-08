@@ -105,7 +105,7 @@ lda.plot.topic <- function(m, topic_nr, time_var, category_var, date_interval='d
 #' @param date_interval The desired date_interval ('day','week','month', or 'year')
 #' @return A vector of Date values
 #' @export
-prepare.time.var <- function(time_var, date_interval){
+lda.prepare.time.var <- function(time_var, date_interval){
   if(class(time_var) == 'Date'){
     if(date_interval == 'day') time_var = as.Date(format(time_var, '%Y-%m-%d'))
     if(date_interval == 'month') time_var = as.Date(paste(format(time_var, '%Y-%m'),'-01',sep=''))
@@ -123,7 +123,7 @@ prepare.time.var <- function(time_var, date_interval){
 #' @param date_interval The date_interval is required to know what the gaps are
 #' @return A data.frame with the columns 'time' (Date) and 'value' (numeric)  
 #' @export
-fill.time.gaps <- function(d, date_interval){
+lda.fill.time.gaps <- function(d, date_interval){
   if(class(d$time) == 'numeric'){
     for(t in min(d$time):max(d$time)) 
       if(!t %in% d$time) d = rbind(d, data.frame(time=t, value=0))
@@ -149,7 +149,7 @@ fill.time.gaps <- function(d, date_interval){
 #' @param value Show topic values as 'total', or as 'relative' to the attention for other topics
 #' @return The aggregated/transformed topic values
 #' @export
-prepare.plot.values <- function(m, break_var, topic_nr, pct=F, value='total', filter=NULL){
+lda.prepare.plot.values <- function(m, break_var, topic_nr, pct=F, value='total', filter=NULL){
   hits = m$document_sums[topic_nr,]
   d = aggregate(hits, by=list(break_var=break_var), FUN='sum') 
   if(value == 'relative'){
@@ -176,10 +176,10 @@ prepare.plot.values <- function(m, break_var, topic_nr, pct=F, value='total', fi
 #' @export
 lda.plot.time <- function(m, topic_nr, time_var, date_interval='day', pct=F, value='total', return.values=F){
   par(mar=c(3,3,3,1))
-  time_var = prepare.time.var(time_var, date_interval)  
-  d = prepare.plot.values(m, break_var=time_var, topic_nr=topic_nr, pct=pct, value=value)
+  time_var = lda.prepare.time.var(time_var, date_interval)  
+  d = lda.prepare.plot.values(m, break_var=time_var, topic_nr=topic_nr, pct=pct, value=value)
   colnames(d) = c('time','value')
-  d = fill.time.gaps(d, date_interval)
+  d = lda.fill.time.gaps(d, date_interval)
   plot(d$time, d$value, type='l', xlab='', main='', ylab='', xlim=c(min(d$time), max(d$time)), ylim=c(0, max(d$value)), bty='L', lwd=5, col='darkgrey')
   par(mar=c(3,3,3,3))
   if(return.values==T) d
@@ -199,7 +199,7 @@ lda.plot.time <- function(m, topic_nr, time_var, date_interval='day', pct=F, val
 #' @export
 lda.plot.category <- function(m, topic_nr, category_var, pct=F, value='total', return.values=F){
   par(mar=c(15,3,1,2))
-  d = prepare.plot.values(m, break_var=category_var, topic_nr=topic_nr, pct=pct, value=value)
+  d = lda.prepare.plot.values(m, break_var=category_var, topic_nr=topic_nr, pct=pct, value=value)
   colnames(d) = c('category','value')
   barplot(as.matrix(t(d[,c('value')])), main='', beside=TRUE,horiz=FALSE,
           density=NA,

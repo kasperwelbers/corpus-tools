@@ -27,16 +27,19 @@ If your data is in common, unprocessed textual form (such as this document) then
 Creating the Document-Term Matrix from tokens
 ========================================================
 
-It could also be that you prefer to pre-process your data outside of R; possibly using more advanced methods such as lemmatizing and part-of-speech tagging, that (to our knowledge) are not supported well within R. For reference, an open-source software package to accommodate this process that we are affiliated with is [AmCAT](https://github.com/amcat/). 
+It could also be that you prefer to pre-process and tokenize your data outside of R; 
+possibly using more advanced methods such as lemmatizing and part-of-speech tagging, 
+(that to our knowledge are not supported well within R). 
+For reference, an open-source software package to accommodate this process that we are affiliated with is [AmCAT](https://github.com/amcat/). A howto for creating a DTM using amcat can be found [here](https://github.com/amcat/amcat-r/blob/master/howto/howto_corpus.Rmd)
 
-If this is the case, then an easy and efficient way to import this data into R is as a data.frame (e.g., using csv), in which each row represents one token within a document, possibly including a value for how often the token occured in this document. This can look like this (example based on AmCAT output):
+If data has been pre-processed and tokenized elsewhere, then an easy and efficient way to import this data into R is as a data.frame (e.g., using csv), in which each row represents how often a token occured within a document. This can look like this (example based on AmCAT output):
 
 ```{r}
 load('demo_tokens_amcat.rdata')
 head(tokens)
 ```
 
-To our knowledge, `tm` has no functions to directly transform this data format into a `DocumentTermMatrix`, but it can quite easily be casted into a sparse matrix, and then transformed into a dtm. The `dtm.create` function, offered in the `corpustools` package, can do this for you. For our example, we use the [lemma](http://en.wikipedia.org/wiki/Lemma_(morphology)) of the words. In the `dtm.create` function we simply give the vector for the lemma, together with a vector indicating in which documents the lemma occured (aid) and how often (freq).
+To our awareness, `tm` has no functions to directly transform this data format into a `DocumentTermMatrix`, but it can quite easily be casted into a sparse matrix, and then transformed into a dtm. The `dtm.create` function, offered in the `corpustools` package, can do this for you. For our example, we use the [lemma](http://en.wikipedia.org/wiki/Lemma_(morphology)) of the words. In the `dtm.create` function we simply give the vector for the lemma, together with a vector indicating in which documents the lemma occured (aid) and how often (freq).
 
 ```{r, message=F}
 library(corpustools)
