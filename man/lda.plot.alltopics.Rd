@@ -3,7 +3,8 @@
 \alias{lda.plot.alltopics}
 \title{Plot all topics}
 \usage{
-lda.plot.alltopics(m, time_var, category_var, path, date_interval = "day")
+lda.plot.alltopics(m, time_var, category_var, path, date_interval = "day",
+  value = "total")
 }
 \arguments{
 \item{m}{The output of \code{\link{lda.collapsed.gibbs.sampler}}}

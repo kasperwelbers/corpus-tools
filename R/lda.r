@@ -64,12 +64,12 @@ lda.topics.per.document <- function(topics) {
 #' @param date_interval The interval for plotting the values over time. Can be: 'day', 'week', 'month' or 'year'
 #' @return Nothing
 #' @export
-lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day'){
+lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day', value='total'){
   for(topic_nr in 1:nrow(m$document_sums)){
     print(paste('Plotting:',topic_nr))
     fn = paste(path, topic_nr, ".png", sep="")
     if (!is.null(fn)) png(fn, width=1280,height=800)
-    lda.plot.topic(m, topic_nr, time_var, category_var, date_interval)
+    lda.plot.topic(m, topic_nr, time_var, category_var, date_interval, value=value)
     if (!is.null(fn)) dev.off()
   }
   par(mfrow=c(1,1), mar=c(3,3,3,3))
