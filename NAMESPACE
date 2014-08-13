@@ -3,6 +3,7 @@
 import(Matrix)
 export(cast.sparse.matrix)
 export(corpora.compare)
+export(documentsums)
 export(dtm.create)
 export(lda.fill.time.gaps)
 export(lda.fit)

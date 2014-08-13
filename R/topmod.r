@@ -1,5 +1,25 @@
 ### PREPARE DATA
 
+#' Get word assignments from LDA_GIBBS class (output of topmod.lda.fit). This is similar to the documentsums object that comes as the output of lda.collapsed.gibbs.sampler
+#' 
+#' Get word assignments from LDA_GIBBS class (output of topmod.lda.fit). This is similar to the documentsums object that comes as the output of lda.collapsed.gibbs.sampler
+#' LDA assigns a topic to each unique word in a document. If you also want to take into account how often this word occured, the document term matrix (as used in the input for topmod.lda.fit) must be included in the weight.by.dtm argument.
+#' 
+#' @param m The output from one of the topicmodeling functions in the topicmodels package (e.g., LDA_GIBBS)
+#' @param weight.by.dtm If you want to weight the topic assignment of a word to the number of times the word occured, give the document term matrix for this argument
+#' @return A matrix where rows are topics and columns are documents. Values represent the number of times the topic is assigned to a word in this document (essentially this is the same as the documentsums object in the output of lda.collapsed.gibbs.samler)
+#' @export
+documentsums <- function(m, weight.by.dtm=NULL){
+  assignments = data.frame(i=m@wordassignments$i, j=m@wordassignments$j, v=m@wordassignments$v)
+  if(!is.null(weight.by.dtm)){
+    dtm = weight.by.dtm[m@documents,m@terms]
+    dtm = data.frame(i=dtm$i, j=dtm$j, count=dtm$v)
+    assignments = merge(assignments, dtm, by=c('i','j'), all.x=T)
+    docsums = acast(assignments, v ~ i, value.var='count', fun.aggregate=sum)
+  } else docsums = acast(assignments, v ~ i, value.var='j', fun.aggregate=length) 
+  docsums
+}
+
 #' Estimate a topic model using the lda package
 #' 
 #' Estimate an LDA topic model using the \code{\link{LDA}} function
@@ -143,15 +163,18 @@ topmod.fill.time.gaps <- function(d, date_interval){
 #' @return The aggregated/transformed topic values
 #' @export
 topmod.prepare.plot.values <- function(m, break_var, topic_nr, pct=F, value='total', filter=NULL){
-  hits = posterior(m)$topics[,topic_nr]
+  docsums = documentsums(m)
+  hits = t(docsums)
   d = aggregate(hits, by=list(break_var=break_var), FUN='sum') 
-  if(value == 'relative'){ 
-    totals = aggregate(rep(1, length(break_var)), by=list(break_var=break_var), FUN='sum')
+  if(value == 'relative'){
+    total_hits = colSums(docsums)  
+    totals = aggregate(total_hits, by=list(break_var=break_var), FUN='sum')
     d$x = d$x / totals$x
   }
   if(pct == T) d$x = d$x / sum(d$x)
   d
 }
+
 
 #' Plots topic values over time
 #' 
