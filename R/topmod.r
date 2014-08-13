@@ -164,7 +164,7 @@ topmod.fill.time.gaps <- function(d, date_interval){
 #' @export
 topmod.prepare.plot.values <- function(m, break_var, topic_nr, pct=F, value='total', filter=NULL){
   docsums = documentsums(m)
-  hits = t(docsums[topic_nr,])
+  hits = docsums[topic_nr,]
   d = aggregate(hits, by=list(break_var=break_var), FUN='sum') 
   if(value == 'relative'){
     total_hits = colSums(docsums)  
