@@ -3,7 +3,8 @@
 \alias{topmod.plot.alltopics}
 \title{Plot all topics}
 \usage{
-topmod.plot.alltopics(m, time_var, category_var, path, date_interval = "day")
+topmod.plot.alltopics(m, time_var, category_var, path, date_interval = "day",
+  value = "total")
 }
 \arguments{
 \item{m}{The output of \code{\link{topmod.collapsed.gibbs.sampler}}}
