@@ -9,6 +9,7 @@ Depends:
     Matrix,
     lda,
     tm,
+    reshape2,
     topicmodels,
     RColorBrewer,
     wordcloud
