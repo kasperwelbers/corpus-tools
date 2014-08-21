@@ -171,7 +171,8 @@ topics.plot.wordcloud <- function(topics, topic_nr){
   x = sort(x, decreasing=T)[1:100]
   x = x[!is.na(x)]
   names = sub("/.*", "", names(x))
-  freqs = x**.5
+  #freqs = x**.5
+  freqs = x
   pal <- brewer.pal(6,"YlGnBu")
   wordcloud(names, freqs, scale=c(6,.5), min.freq=1, max.words=Inf, random.order=FALSE, rot.per=.15, colors=pal)
 }
