@@ -166,12 +166,12 @@ topics.plot.category <- function(document_sums, topic_nr, category_var, pct=F, v
 #' @param topic_nr The index of the topic (1 to K)
 #' @return Nothing, just plots
 #' @export
-topics.plot.wordcloud <- function(topics, topic_nr){
+topics.plot.wordcloud <- function(topics, topic_nr, wordsize_scale=0.5){
   x = topics[topic_nr,]
   x = sort(x, decreasing=T)[1:100]
   x = x[!is.na(x)]
   names = sub("/.*", "", names(x))
-  freqs = x
+  freqs = x^wordsize_scale
   pal <- brewer.pal(6,"YlGnBu")
   wordcloud(names, freqs, scale=c(6,.5), min.freq=1, max.words=Inf, random.order=FALSE, rot.per=.15, colors=pal)
 }

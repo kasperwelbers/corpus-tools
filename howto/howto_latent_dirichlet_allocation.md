@@ -18,6 +18,7 @@ library(corpustools)
 ## Loading required package: Matrix
 ## Loading required package: lda
 ## Loading required package: tm
+## Loading required package: reshape2
 ## Loading required package: topicmodels
 ## Loading required package: RColorBrewer
 ## Loading required package: wordcloud
@@ -48,28 +49,28 @@ termstats[sample(1:nrow(termstats), 10), ]
 ```
 
 ```
-##                      term characters number nonalpha termfreq docfreq
-## slough             slough          6  FALSE    FALSE        1       1
-## symposium       symposium          9  FALSE    FALSE        1       1
-## person             person          6  FALSE    FALSE       39      32
-## subscription subscription         12  FALSE    FALSE        5       2
-## head                 head          4  FALSE    FALSE        7       3
-## gene                 gene          4  FALSE    FALSE        4       3
-## Consent           Consent          7  FALSE    FALSE        1       1
-## health             health          6  FALSE    FALSE      418     141
-## pair                 pair          4  FALSE    FALSE        7       5
-## Blair               Blair          5  FALSE    FALSE        2       1
-##              reldocfreq   tfidf
-## slough         0.001179 0.06899
-## symposium      0.001179 0.04699
-## person         0.037736 0.02868
-## subscription   0.002358 0.11690
-## head           0.003538 0.09280
-## gene           0.003538 0.06557
-## Consent        0.001179 0.02939
-## health         0.166274 0.03681
-## pair           0.005896 0.05778
-## Blair          0.001179 0.11246
+##                                  term characters number nonalpha termfreq
+## lately                         lately          6  FALSE    FALSE        1
+## discover                     discover          8  FALSE    FALSE        5
+## wide-ranging             wide-ranging         12  FALSE     TRUE        1
+## intense                       intense          7  FALSE    FALSE        2
+## spike                           spike          5  FALSE    FALSE        1
+## student-to-student student-to-student         18  FALSE     TRUE        1
+## ideologue                   ideologue          9  FALSE    FALSE        3
+## helpful                       helpful          7  FALSE    FALSE        7
+## reflect                       reflect          7  FALSE    FALSE       45
+## B.V.                             B.V.          4  FALSE     TRUE        2
+##                    docfreq reldocfreq   tfidf
+## lately                   1   0.001179 0.05932
+## discover                 5   0.005896 0.04675
+## wide-ranging             1   0.001179 0.05559
+## intense                  2   0.002358 0.04932
+## spike                    1   0.001179 0.03148
+## student-to-student       1   0.001179 0.04792
+## ideologue                1   0.001179 0.19989
+## helpful                  7   0.008255 0.03274
+## reflect                 39   0.045991 0.02975
+## B.V.                     2   0.002358 0.03047
 ```
 
 
@@ -100,27 +101,27 @@ top.topic.words(m$topics)[, 1:4]
 ```
 
 ```
-##       [,1]            [,2]            [,3]           [,4]          
-##  [1,] "collaboration" "political"     "mobile"       "%"           
-##  [2,] "medical"       "exposure"      "phone"        "symptom"     
-##  [3,] "scientific"    "opinion"       "diffusion"    "physician"   
-##  [4,] "academic"      "politics"      "adoption"     "agent"       
-##  [5,] "medicine"      "indirect"      "usage"        "percent"     
-##  [6,] "core"          "sphere"        "category"     "p"           
-##  [7,] "planning"      "democratic"    "innovation"   "caregiver"   
-##  [8,] "grow"          "choice"        "contact"      "psychosocial"
-##  [9,] "region"        "scholar"       "african"      "density"     
-## [10,] "actual"        "debate"        "geographic"   "score"       
-## [11,] "practitioner"  "heterogeneity" "e-mail"       "domestic"    
-## [12,] "complexity"    "selective"     "connectivity" "/"           
-## [13,] "planner"       "democracy"     "reality"      "cite"        
-## [14,] "official"      "argument"      "third"        "ci"          
-## [15,] "adapt"         "choose"        "adopter"      "return"      
-## [16,] "record"        "press"         "file"         "hear"        
-## [17,] "de"            "ideological"   "editorial"    "satisfaction"
-## [18,] "expansion"     "vote"          "adopt"        "<"           
-## [19,] "discipline"    "institute"     "homophily"    "exploratory" 
-## [20,] "syndrome"      "bias"          "recovery"     "shyness"
+##       [,1]            [,2]             [,3]            [,4]          
+##  [1,] "collaboration" "rural"          "language"      "space"       
+##  [2,] "scientific"    "formation"      "child"         "genre"       
+##  [3,] "emergency"     "city"           "region"        "engagement"  
+##  [4,] "academic"      "infrastructure" "expression"    "I"           
+##  [5,] "medicine"      "urban"          "communicative" "conversation"
+##  [6,] "core"          "crisis"         "processing"    "networked"   
+##  [7,] "web-based"     "real"           "domain"        "might"       
+##  [8,] "she"           "property"       "asd"           "element"     
+##  [9,] "collaborative" "incorporate"    "contact"       "divide"      
+## [10,] "leadership"    "transformation" "cue"           "distribute"  
+## [11,] "preference"    "complexity"     "brain"         "actual"      
+## [12,] "presentation"  "investment"     "interpret"     "dialogue"    
+## [13,] "whom"          "conventional"   "voice"         "debate"      
+## [14,] "disability"    "broadband"      "style"         "placement"   
+## [15,] "de"            "sector"         "balance"       "ideal"       
+## [16,] "late"          "sport"          "sign"          "owner"       
+## [17,] "planner"       "institute"      "impairment"    "senior"      
+## [18,] "teaching"      "Australia"      "linguistic"    "connectivity"
+## [19,] "University"    "special"        "syndrome"      "node"        
+## [20,] "adapt"         "entrepreneur"   "availability"  "ethnographic"
 ```
 
 
