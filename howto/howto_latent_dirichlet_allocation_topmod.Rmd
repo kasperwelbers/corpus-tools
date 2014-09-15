@@ -68,10 +68,9 @@ topic_term_matrix = posterior(m)$terms
 topics.plot.wordcloud(topic_term_matrix, topic_nr=1)
 ```
 
-With `lda.plot.time` and `lda.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
+With `topics.plot.time` and `topics.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
 
 ```{r}
-topics.plot.time
 topic_document_matrix = documentsums(m, weight.by.dtm=dtm) # the documentsums function extracts a matrix identical to the documentsums slot of the output of the lda.collapsed.gibbs.sampler in the lda package. If the dtm is given in the weight.by.dtm parameter, then word-to-topic assignments are multiplied by the word occurence (which, I believe, is also what the lda package does)
 topics.plot.time(topic_document_matrix, 1, meta$date, date_interval='month', value='relative')
 # Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
@@ -84,10 +83,13 @@ topics.plot.category(topic_document_matrix, 1, meta$journal.top10, value='relati
 # Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
 ```
 
-Finally, it can be usefull to print all this information together. That is what the following function does.
+It can be usefull to print all this information together. That is what the following function does.
 
 ```{r, message=F, warning=FALSE, fig.width=10, fig.height=10}
 topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 1, meta$date, meta$journal.top10, date_interval='year', value='relative')
 topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 2, meta$date, meta$journal.top10, date_interval='year', value='relative')
 topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 10, meta$date, meta$journal.top10, date_interval='year', value='relative')
 ```
+
+Finally, with the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
+

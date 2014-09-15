@@ -58,28 +58,28 @@ termstats[sample(1:nrow(termstats), 10), ]
 ```
 
 ```
-##                            term characters number nonalpha termfreq
-## high-resolution high-resolution         15  FALSE     TRUE        1
-## Change                   Change          6  FALSE    FALSE        4
-## correctlyus         correctlyus         11  FALSE    FALSE        1
-## mp3                         mp3          3   TRUE    FALSE        4
-## Amer                       Amer          4  FALSE    FALSE        6
-## li                           li          2  FALSE    FALSE        1
-## sort                       sort          4  FALSE    FALSE        2
-## attributable       attributable         12  FALSE    FALSE        4
-## July                       July          4  FALSE    FALSE        1
-## Habbo                     Habbo          5  FALSE    FALSE        1
-##                 docfreq reldocfreq   tfidf
-## high-resolution       1   0.001179 0.03366
-## Change                4   0.004717 0.02996
-## correctlyus           1   0.001179 0.07370
-## mp3                   2   0.002358 0.11376
-## Amer                  6   0.007075 0.03635
-## li                    1   0.001179 0.04610
-## sort                  2   0.002358 0.03906
-## attributable          4   0.004717 0.04242
-## July                  1   0.001179 0.04610
-## Habbo                 1   0.001179 0.03800
+##                                term characters number nonalpha termfreq
+## purported                 purported          9  FALSE    FALSE        1
+## 1995                           1995          4   TRUE    FALSE        4
+## conceptualization conceptualization         17  FALSE    FALSE        9
+## beneficial               beneficial         10  FALSE    FALSE       11
+## 21.7                           21.7          4   TRUE     TRUE        1
+## 40,000                       40,000          6   TRUE     TRUE        1
+## y                                 y          1  FALSE    FALSE        2
+## older                         older          5  FALSE    FALSE       45
+## cdma                           cdma          4  FALSE    FALSE        1
+## seminal                     seminal          7  FALSE    FALSE        1
+##                   docfreq reldocfreq   tfidf
+## purported               1   0.001179 0.07782
+## 1995                    4   0.004717 0.03742
+## conceptualization       8   0.009434 0.04978
+## beneficial             10   0.011792 0.03156
+## 21.7                    1   0.001179 0.03499
+## 40,000                  1   0.001179 0.02181
+## y                       1   0.001179 0.07483
+## older                  22   0.025943 0.06509
+## cdma                    1   0.001179 0.04462
+## seminal                 1   0.001179 0.03845
 ```
 
 
@@ -108,28 +108,17 @@ terms(m, 10)[, 1:5]  # show first 5 topics, with ten top words per topic
 ```
 
 ```
-##       Topic 1       Topic 2        Topic 3       Topic 4        
-##  [1,] "student"     "exchange"     "campaign"    "collaboration"
-##  [2,] "Facebook"    "resident"     "audience"    "human"        
-##  [3,] "profile"     "variable"     "marketing"   "older"        
-##  [4,] "college"     "distance"     "channel"     "region"       
-##  [5,] "post"        "neighborhood" "consumer"    "scientific"   
-##  [6,] "privacy"     "frequency"    "advertising" "law"          
-##  [7,] "alcohol"     "agent"        "product"     "advocacy"     
-##  [8,] "personality" "mobility"     "radio"       "presentation" 
-##  [9,] "topic"       "desire"       "along"       "go"           
-## [10,] "learning"    "provision"    "business"    "University"   
-##       Topic 5   
-##  [1,] "woman"   
-##  [2,] "%"       
-##  [3,] "ask"     
-##  [4,] "barrier" 
-##  [5,] "she"     
-##  [6,] "percent" 
-##  [7,] "p"       
-##  [8,] "african" 
-##  [9,] "planning"
-## [10,] "american"
+##       Topic 1      Topic 2        Topic 3      Topic 4        Topic 5     
+##  [1,] "political"  "older"        "industry"   "science"      "adolescent"
+##  [2,] "blog"       "loneliness"   "digital"    "physical"     "channel"   
+##  [3,] "citizen"    "emotional"    "market"     "contact"      "resident"  
+##  [4,] "opinion"    "agent"        "production" "scientific"   "emergency" 
+##  [5,] "democratic" "core"         "music"      "intellectual" "minority"  
+##  [6,] "politics"   "desire"       "actor"      "domain"       "ethnic"    
+##  [7,] "choice"     "rule"         "he"         "home"         "risk"      
+##  [8,] "scholar"    "presentation" "reality"    "elderly"      "US"        
+##  [9,] "preference" "programme"    "producer"   "record"       "depressive"
+## [10,] "argument"   "South"        "software"   "carer"        "coordinate"
 ```
 
 
@@ -164,26 +153,8 @@ topics.plot.wordcloud(topic_term_matrix, topic_nr = 1)
 ![plot of chunk unnamed-chunk-7](figures_lda_topmod/unnamed-chunk-7.png) 
 
 
-With `lda.plot.time` and `lda.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
+With `topics.plot.time` and `topics.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
 
-
-```r
-topics.plot.time
-```
-
-```
-## function(document_sums, topic_nr, time_var, date_interval='day', pct=F, value='total', return.values=F){
-##   par(mar=c(3,3,3,1))
-##   time_var = prepare.time.var(time_var, date_interval)  
-##   d = prepare.topics.plot.values(document_sums, break_var=time_var, topic_nr=topic_nr, pct=pct, value=value)
-##   colnames(d) = c('time','value')
-##   d = fill.time.gaps(d, date_interval)
-##   plot(d$time, d$value, type='l', xlab='', main='', ylab='', xlim=c(min(d$time), max(d$time)), ylim=c(0, max(d$value)), bty='L', lwd=5, col='darkgrey')
-##   par(mar=c(3,3,3,3))
-##   if(return.values==T) d
-## }
-## <environment: namespace:corpustools>
-```
 
 ```r
 topic_document_matrix = documentsums(m, weight.by.dtm = dtm)  # the documentsums function extracts a matrix identical to the documentsums slot of the output of the lda.collapsed.gibbs.sampler in the lda package. If the dtm is given in the weight.by.dtm parameter, then word-to-topic assignments are multiplied by the word occurence (which, I believe, is also what the lda package does)
@@ -214,7 +185,7 @@ topics.plot.category(topic_document_matrix, 1, meta$journal.top10, value = "rela
 ```
 
 
-Finally, it can be usefull to print all this information together. That is what the following function does.
+It can be usefull to print all this information together. That is what the following function does.
 
 
 ```r
@@ -237,4 +208,7 @@ topics.plot.topic(document_sums = topic_document_matrix, topics = topic_term_mat
 ```
 
 ![plot of chunk unnamed-chunk-10](figures_lda_topmod/unnamed-chunk-103.png) 
+
+
+Finally, with the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
 

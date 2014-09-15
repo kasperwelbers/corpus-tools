@@ -145,7 +145,7 @@ topics.plot.time <- function(document_sums, topic_nr, time_var, date_interval='d
 #' @return data.frame for plotted values
 #' @export
 topics.plot.category <- function(document_sums, topic_nr, category_var, pct=F, value='total', return.values=F){
-  par(mar=c(10,3,1,2))
+  par(mar=c(12,3,1,2))
   d = prepare.topics.plot.values(document_sums, break_var=as.character(category_var), topic_nr=topic_nr, pct=pct, value=value)
   colnames(d) = c('category','value')
   barplot(as.matrix(t(d[,c('value')])), main='', beside=TRUE,horiz=FALSE,
@@ -153,7 +153,7 @@ topics.plot.category <- function(document_sums, topic_nr, category_var, pct=F, v
           col='darkgrey',
           xlab='',
           ylab="",
-          axes=T, names.arg=d$category, cex.names=1, cex.axis=1, adj=1, las=2)
+          axes=T, names.arg=d$category, cex.names=1, cex.axis=0.7, adj=1, las=2)
   par(mar=c(3,3,3,3))
   if(return.values==T) d
 }
@@ -166,7 +166,7 @@ topics.plot.category <- function(document_sums, topic_nr, category_var, pct=F, v
 #' @param topic_nr The index of the topic (1 to K)
 #' @return Nothing, just plots
 #' @export
-topics.plot.wordcloud <- function(topics, topic_nr, wordsize_scale=0.5){
+topics.plot.wordcloud <- function(topics, topic_nr, wordsize_scale=0.75){
   x = topics[topic_nr,]
   x = sort(x, decreasing=T)[1:100]
   x = x[!is.na(x)]
