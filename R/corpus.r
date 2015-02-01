@@ -33,7 +33,7 @@ cast.sparse.matrix <- function(rows, columns, values=NULL) {
 #' @param freqs a vector of the frequency a a term in a document
 #' @return a document-term matrix  \code{\link{DocumentTermMatrix}}
 #' @export
-dtm.create <- function(documents, terms, freqs) {
+dtm.create <- function(documents, terms, freqs=rep(1, length(documents))) {
   # remove NA terms
   d = data.frame(ids=documents, terms=terms, freqs=freqs)
   if (sum(is.na(d$terms)) > 0) {
