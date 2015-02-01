@@ -77,15 +77,23 @@ topmod.order.meta <- function(m, meta, match.by = 'id'){
 #' @param date_interval The interval for plotting the values over time. Can be: 'day', 'week', 'month' or 'year'
 #' @return Nothing
 #' @export
-topmod.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day', value='total'){
+topmod.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day', value='total', create_index=T){
+  if (!file.exists(path)) dir.create(path)
   for(topic_nr in 1:m@k){
-    print(paste('Plotting:',topic_nr))
-    fn = paste(path, topic_nr, ".png", sep="")
+    message('Plotting:', topic_nr)
+    fn = file.path(path, paste(topic_nr, ".png", sep=""))
     if (!is.null(fn)) png(fn, width=1280,height=800)
     topmod.plot.topic(m, topic_nr, time_var, category_var, date_interval, value=value)
     if (!is.null(fn)) dev.off()
   }
   par(mfrow=c(1,1), mar=c(3,3,3,3))
+  if (create_index) {
+    index = create_index(m)
+    fn = file.path(path, "index.html")
+    write(index,  fn)
+    message('Writing ', fn)
+    if (interactive()) browseURL(fn)
+  }
 }
 
 #' Plots topic wordcloud, and attention over time and per category
@@ -103,7 +111,7 @@ topmod.plot.alltopics <- function(m, time_var, category_var, path, date_interval
 #' @export
 topmod.plot.topic <- function(m, topic_nr, time_var, category_var, date_interval='day', pct=F, value='total'){
   par(mar=c(4.5,3,2,1), cex.axis=1.7)
-  layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE), widths=c(2.5,1.5), heights=c(1,2))
+  layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE), widths=c(3,1), heights=c(1,3))
   topmod.plot.time(m, topic_nr, time_var, date_interval, pct=pct, value=value)
   topmod.plot.wordcloud(m, topic_nr)
   topmod.plot.category(m, topic_nr, category_var, pct=pct, value=value)
@@ -221,7 +229,7 @@ topmod.plot.category <- function(m, topic_nr, category_var, pct=F, value='total'
           col='darkgrey',
           xlab='',
           ylab="",
-          axes=T, names.arg=d$category, cex.names=0.8, cex.axis=0.8, adj=1, las=2)
+          axes=T, names.arg=d$category, cex.names=1.2, cex.axis=1.2, adj=1, las=2)
   par(mar=c(3,3,3,3))
   if(return.values==T) d
 }
@@ -241,6 +249,19 @@ topmod.plot.wordcloud <- function(m, topic_nr){
   names = sub("/.*", "", names(x))
   freqs = x
   pal <- brewer.pal(6,"YlGnBu")
-  wordcloud(names, freqs, scale=c(6,.5), min.freq=1, max.words=Inf, random.order=FALSE, rot.per=.15, colors=pal)
+  wordcloud(names, freqs, scale=c(10,.5), min.freq=1, max.words=Inf, random.order=FALSE, rot.per=.15, colors=pal)
 }
 
+#' Create an index file for plot.all.topics
+topmod_create_index <- function(m) {
+  html = c('<html>', 
+           '<head><link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"></head>',
+           '<body><div class="row">')
+  for (i in 1:nrow(m@beta)) {
+    chunk = paste('<div class="col-xs-6 col-md-2 col-lg-3"><a href="', i, '.png"',
+                  ' class="thumbnail"><img src="',i,'.png"></a></div>', sep='')
+    html = c(html, chunk)
+  }
+  html = c(html, "</div></body></html>")
+  paste(html, collapse="\n")
+}
