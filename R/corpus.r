@@ -104,20 +104,33 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001) {
 #' Plot a word cloud from a dtm
 #' 
 #' Compute the term frequencies for the dtm and plot a word cloud with the top n topics
+#' You can either supply a document-term matrix or provide terms and freqs directly
+#' (in which case this is an alias for wordcloud::wordcloud with sensible defaults)
 #' 
 #' @param dtm the document-term matrix
 #' @param nterms the amount of words to plot (default 100)
 #' @param freq.fun if given, will be applied to the frequenies (e.g. sqrt)
+#' @param terms the terms to plot, ignored if dtm is given
+#' @param freqs the frequencies to plot, ignored if dtm is given
 #' @param scale the scale to plot (see wordcloud::wordcloud)
 #' @param min.freq the minimum frquency to include (see wordcloud::wordcloud)
 #' @param rot.per the percentage of vertical words (see wordcloud::wordcloud)
 #' @param pal the colour model, see RColorBrewer
 #' @export
-dtm.wordcloud <- function(dtm, nterms=100, freq.fun=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, pal=brewer.pal(6,"YlGnBu")) {
-  terms = term.statistics(dtm)
-  freqs = terms$termfreq[1:nterms]
+dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, pal=brewer.pal(6,"YlGnBu")) {
+  if (!is.null(dtm)) {
+    t = term.statistics(dtm)
+    terms = t$term
+    freqs = t$termfreq
+  }
+  if (!is.null(nterms)) {
+    terms = terms[1:nterms] 
+    freqs = freqs[1:nterms]
+  }
   if (!is.null(freq.fun)) freqs = freq.fun(freqs)
-  wordcloud(terms$term[1:nterms], freqs, 
+   
+  if (is.null(terms) | is.null(freqs)) stop("Please provide dtm or terms and freqs")
+  wordcloud(terms, freqs, 
           scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE, 
           rot.per=rot.per, colors=pal)
 }
