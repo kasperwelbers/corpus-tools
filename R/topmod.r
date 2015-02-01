@@ -88,7 +88,7 @@ topmod.plot.alltopics <- function(m, time_var, category_var, path, date_interval
   }
   par(mfrow=c(1,1), mar=c(3,3,3,3))
   if (create_index) {
-    index = create_index(m)
+    index = topmod.create.index(m)
     fn = file.path(path, "index.html")
     write(index,  fn)
     message('Writing ', fn)
@@ -253,7 +253,7 @@ topmod.plot.wordcloud <- function(m, topic_nr){
 }
 
 #' Create an index file for plot.all.topics
-topmod_create_index <- function(m) {
+topmod.create.index <- function(m) {
   html = c('<html>', 
            '<head><link href="http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"></head>',
            '<body><div class="row">')
