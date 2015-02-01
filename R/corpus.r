@@ -100,3 +100,24 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001) {
   f$chi = chi2(f$termfreq.x, f$termfreq.y, sum(f$termfreq.x) - f$termfreq.x, sum(f$termfreq.y) - f$termfreq.y)
   f
 }
+
+#' Plot a word cloud from a dtm
+#' 
+#' Compute the term frequencies for the dtm and plot a word cloud with the top n topics
+#' 
+#' @param dtm the document-term matrix
+#' @param nterms the amount of words to plot (default 100)
+#' @param freq.fun if given, will be applied to the frequenies (e.g. sqrt)
+#' @param scale the scale to plot (see wordcloud::wordcloud)
+#' @param min.freq the minimum frquency to include (see wordcloud::wordcloud)
+#' @param rot.per the percentage of vertical words (see wordcloud::wordcloud)
+#' @param pal the colour model, see RColorBrewer
+#' @export
+dtm.wordcloud <- function(dtm, nterms=100, freq.fun=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, pal=brewer.pal(6,"YlGnBu")) {
+  terms = term.statistics(dtm)
+  freqs = terms$termfreq[1:nterms]
+  if (!is.null(freq.fun)) freqs = freq.fun(freqs)
+  wordcloud(terms$term[1:nterms], freqs, 
+          scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE, 
+          rot.per=rot.per, colors=pal)
+}
