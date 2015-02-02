@@ -80,6 +80,6 @@ dtm.wordcloud(dtm)
 
 For more information on how to work with `dtm`s using corpustools, please see the other howto's:
 
-* [Frequency analysis](howto/frequency.md)
-* [Corpus comparison](howto/compare.md)
-* [LDA topic modeling](howto/lda.md)
+* [Frequency analysis](frequency.md)
+* [Corpus comparison](compare.md)
+* [LDA topic modeling](lda.md)

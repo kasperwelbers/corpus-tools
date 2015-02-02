@@ -15,10 +15,10 @@ m
 ```
 ##          terms
 ## documents spam bacon egg
-##      doc1    1     2   1
-##      doc2    2     2   0
-##      doc3    0     1   0
-##      doc4    1     0   1
+##      doc1    2     2   1
+##      doc2    2     1   1
+##      doc3    0     1   2
+##      doc4    2     0   1
 ```
 
 Commonly, this matrix is very sparse. That is, a large majority of the values will be zero, since documents generally only use a small portion of the words used in the entire corpus. For efficient computing and data storage, it is therefore worthwhile to not simply use a matrix, but a type of sparse matrix. We suggest the use of the `DocumentTermMatrix` class that is available in the `tm` (text mining) package. This is a type of sparse matrix dedicated to text analysis.
@@ -32,8 +32,8 @@ dtm
 
 ```
 ## <<DocumentTermMatrix (documents: 4, terms: 3)>>
-## Non-/sparse entries: 8/4
-## Sparsity           : 33%
+## Non-/sparse entries: 10/2
+## Sparsity           : 17%
 ## Maximal term length: 5
 ## Weighting          : term frequency (tf)
 ```
@@ -164,6 +164,6 @@ dtm.wordcloud(dtm)
 
 For more information on how to work with `dtm`s using corpustools, please see the other howto's:
 
-* [Frequency analysis](howto/frequency.md)
-* [Corpus comparison](howto/compare.md)
-* [LDA topic modeling](howto/lda.md)
+* [Frequency analysis](frequency.md)
+* [Corpus comparison](compare.md)
+* [LDA topic modeling](lda.md)
