@@ -1,5 +1,5 @@
 ```{r, include=FALSE}
-opts_chunk$set(fig.path = "figures_lda_topmod/")
+opts_chunk$set(fig.path = "figures_lda/")
 ```
 
 Difference howto_latent_dirichlet_allocation.Rmd and this file

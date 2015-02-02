@@ -1,3 +1,7 @@
+```{r, include=FALSE}
+opts_chunk$set(fig.path = "figures_dtm/")
+```
+
 The Document-Term Matrix (dtm)
 ========================================================
 
@@ -24,6 +28,13 @@ Creating the Document-Term Matrix from full-text
 
 If your data is in common, unprocessed textual form (such as this document) then a good approach is to use the `tm` package. `tm` offers various ways to import texts to the `tm` corpus structure. Additionally, it offers various functions to pre-process the data. For instance, removing stop-words, making everything lowercase and reducing words to their stem. From the `corpus` format the texts can then easily be tokenized (i.e. cut up into terms) and made into a dtm. If this is your weapon of choice, we gladly refer to the [tm package vignette](http://cran.r-project.org/web/packages/tm/vignettes/tm.pdf).
 
+Another option is using the `create_matrix` command from the [RTextTools](http://rtexttools.com) package, which is a convenient wrapper for `tm` with stemming and stop-word removal:
+
+```{r}
+library(RTextTools)
+create_matrix(c("One document", "And another"), removeStopwords=T, stemWords=T, language="english")
+```
+
 Creating the Document-Term Matrix from tokens
 ========================================================
 
@@ -32,18 +43,43 @@ possibly using more advanced methods such as lemmatizing and part-of-speech tagg
 (that to our knowledge are not supported well within R). 
 For reference, an open-source software package to accommodate this process that we are affiliated with is [AmCAT](https://github.com/amcat/). A howto for creating a DTM using amcat can be found [here](https://github.com/amcat/amcat-r/blob/master/howto/howto_corpus.Rmd)
 
-If data has been pre-processed and tokenized elsewhere, then an easy and efficient way to import this data into R is as a data.frame (e.g., using csv), in which each row represents how often a token occured within a document. This can look like this (example based on AmCAT output):
+If data has been pre-processed and tokenized elsewhere, you can usually export a list of words in a csv like format (e.g. the standardized conll format). This can be imported into R is as a data.frame (e.g., using read.csv), in which each row represents how often a token occured within a document. 
+
+In the following example, we use the `sotu` data set provided with this package, which contains a list of tokens produced by using Stanford's CoreNLP preprocessing on the State of the Union addresses by presidents (George W.) Bush and Obama
 
 ```{r}
-load('demo_tokens_amcat.rdata')
-head(tokens)
+library(corpustools)
+data(sotu)
+head(sotu.tokens)
 ```
 
-To our awareness, `tm` has no functions to directly transform this data format into a `DocumentTermMatrix`, but it can quite easily be casted into a sparse matrix, and then transformed into a dtm. The `dtm.create` function, offered in the `corpustools` package, can do this for you. For our example, we use the [lemma](http://en.wikipedia.org/wiki/Lemma_(morphology)) of the words. In the `dtm.create` function we simply give the vector for the lemma, together with a vector indicating in which documents the lemma occured (aid) and how often (freq).
+To our awareness, `tm` has no functions to directly transform this data format into a `DocumentTermMatrix`, but it can quite easily be casted into a sparse matrix, and then transformed into a dtm. The `dtm.create` function, offered in the `corpustools` package, can do this for you. For our example, we use the [lemma](http://en.wikipedia.org/wiki/Lemma_(morphology)) of the words. In the `dtm.create` function we simply give the vector for the lemma, together with a vector indicating in which documents the lemma occured (aid).
+
 
 ```{r, message=F}
-library(corpustools)
-dtm = dtm.create(documents=tokens$aid, terms=tokens$lemma, freqs=tokens$freq)
+dtm = dtm.create(documents=sotu.tokens$aid, terms=sotu.tokens$lemma)
 dtm
 ```
 
+Since we are normally not interested in punctuation, prepositions and the like, we can filter the data set on part-of-speech tag, for example keeping only the nouns:
+
+```{r, message=F}
+tokens = sotu.tokens[sotu.tokens$pos1 == 'N', ]
+dtm = dtm.create(documents=tokens$aid, terms=tokens$lemma)
+dtm
+```
+
+
+As you can see, we now have 2210 unique terms rather than 5264. 
+One of the cool things to do with a dtm is create a word cloud, which is made easy by the `dtm.wordcloud` function:
+
+```{r}
+t = term.statistics(dtm)
+dtm.wordcloud(dtm)
+```
+
+For more information on how to work with `dtm`s using corpustools, please see the other howto's:
+
+* [Frequency analysis](howto/frequency.md)
+* [Corpus comparison](howto/compare.md)
+* [LDA topic modeling](howto/lda.md)

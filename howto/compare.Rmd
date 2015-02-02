@@ -1,0 +1,89 @@
+```{r, include=FALSE}
+opts_chunk$set(fig.path = "figures_compare/")
+```
+
+Comparing corpora
+-----------------
+
+It can be interesting to compare vocabulary use in two corpora. For instance, to find out:
+- which terms certain actors are more/less likely to use compared to other actors.
+- which terms are more/less common in texts about certain actors/issues compared to other actors/issues.
+- whether the use of certain terms has increased/decreased between two periods in time.
+
+In this howto we demonstrate how to compare vocabulary use in two corpora, and offer a function to do so conveniently. 
+For data we use wikinews articles about Iraq.
+
+```{r}
+library(corpustools)
+data('wikinews_iraq')
+iraq.dtm
+head(iraq.meta)
+```
+
+For example, lets split our corpus into those articles that mention Bush and those that do not:
+
+```{r}
+ncol(iraq.dtm)
+w = as.matrix(iraq.dtm[,"Bush"])
+dtm.bush = iraq.dtm[w>0, ]
+dtm.rest = iraq.dtm[w==0, ]
+```
+
+To compare two corpora, the function `compare.corpora` is provided. 
+This gives a list of the words that occur 'too much' in the articles mentioning Bush,
+or in other words the collocates of the word 'Bush'.
+The following example selects all words that are overrepresented in the `bush` corpus,
+and sorts them by chi-squared:
+
+```{r}
+terms = corpora.compare(dtm.bush, dtm.rest)
+over = terms[terms$over > 1, ]
+over = over[order(-over$chi),]
+head(over)
+```
+
+To list the underrepresented words, simply reverse the filter:
+
+```{r}
+under = terms[terms$over < 1, ]
+under = under[order(-under$chi),]
+head(under)
+```
+
+
+What can be seen from these two word lists is that the articles mentioning Bush are more political in nature,
+while the other articles describe more (military) action. 
+
+Word clouds
+-----------
+
+We can also create a word cloud from these terms. In this case, we specify a square root transformation of the frequencies to make the smaller terms visible. 
+
+```{r}
+dtm.wordcloud(dtm.bush, freq.fun=sqrt)
+```
+
+Another option is to base the word cloud not on the most common terms in the articles mentioning Bush, but rather on the most typical words. This can be done by basing the word cloud on the overrepresentation or chi-square values rather than the frequency:
+
+```{r}
+dtm.wordcloud(terms=under$term, freqs=under$chi)
+```
+
+Combining with metadata
+-----
+
+Of course, this can also be used to compare e.g. vocabulary differences between newspapers, speakers, periods, etc.
+For example, the following uses the article metadata to compare vocabulary after 2012 with the vocabulary before that date.
+
+```{r message=FALSE}
+iraq.meta = iraq.meta[match(rownames(iraq.dtm), iraq.meta$id), ]
+dtm.before = iraq.dtm[iraq.meta$date < as.Date('2012-01-01'),]
+dtm.after = iraq.dtm[iraq.meta$date >= as.Date('2012-01-01'),]
+terms = corpora.compare(dtm.after, dtm.before)
+terms = terms[order(-terms$chi),]
+head(terms[terms$over > 1, ])
+head(terms[terms$over < 1, ])
+```
+
+So, the latter articles mention the Islam and Turkey more frequently, 
+while the earlier articles feature the war crimes reported by journalist Ford. 

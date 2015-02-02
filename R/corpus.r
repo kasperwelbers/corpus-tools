@@ -120,6 +120,7 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001) {
 dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, pal=brewer.pal(6,"YlGnBu")) {
   if (!is.null(dtm)) {
     t = term.statistics(dtm)
+    t = t[order(t$termfreq, decreasing=T), ]
     terms = t$term
     freqs = t$termfreq
   }

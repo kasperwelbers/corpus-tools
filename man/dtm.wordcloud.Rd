@@ -3,13 +3,20 @@
 \alias{dtm.wordcloud}
 \title{Plot a word cloud from a dtm}
 \usage{
-dtm.wordcloud(dtm, nterms = 100, scale = c(6, 0.5), min.freq = 1,
-  rot.per = 0.15, pal = brewer.pal(6, "YlGnBu"))
+dtm.wordcloud(dtm = NULL, nterms = 100, freq.fun = NULL, terms = NULL,
+  freqs = NULL, scale = c(6, 0.5), min.freq = 1, rot.per = 0.15,
+  pal = brewer.pal(6, "YlGnBu"))
 }
 \arguments{
 \item{dtm}{the document-term matrix}
 
 \item{nterms}{the amount of words to plot (default 100)}
+
+\item{freq.fun}{if given, will be applied to the frequenies (e.g. sqrt)}
+
+\item{terms}{the terms to plot, ignored if dtm is given}
+
+\item{freqs}{the frequencies to plot, ignored if dtm is given}
 
 \item{scale}{the scale to plot (see wordcloud::wordcloud)}
 
@@ -21,5 +28,7 @@ dtm.wordcloud(dtm, nterms = 100, scale = c(6, 0.5), min.freq = 1,
 }
 \description{
 Compute the term frequencies for the dtm and plot a word cloud with the top n topics
+You can either supply a document-term matrix or provide terms and freqs directly
+(in which case this is an alias for wordcloud::wordcloud with sensible defaults)
 }
 
