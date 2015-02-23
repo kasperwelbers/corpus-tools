@@ -124,11 +124,12 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
     terms = t$term
     freqs = t$termfreq
   }
-  if (!is.null(nterms)) {
-    terms = terms[1:nterms] 
-    freqs = freqs[1:nterms]
-  }
   if (!is.null(freq.fun)) freqs = freq.fun(freqs)
+  if (!is.null(nterms)) {
+    select = order(-freqs)[1:nterms]
+    terms = terms[select] 
+    freqs = freqs[select]
+  }
    
   if (is.null(terms) | is.null(freqs)) stop("Please provide dtm or terms and freqs")
   wordcloud(terms, freqs, 
