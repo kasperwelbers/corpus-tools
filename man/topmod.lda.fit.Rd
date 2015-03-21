@@ -4,7 +4,7 @@
 \title{Estimate a topic model using the lda package}
 \usage{
 topmod.lda.fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
-  alpha = 50/K, eta = 0.01, burnin = 250)
+  alpha = 50/K, eta = 0.01, burnin = 250, ...)
 }
 \arguments{
 \item{dtm}{a document term matrix (e.g. the output of \code{\link{amcat.dtm.create}})}
@@ -16,6 +16,8 @@ topmod.lda.fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
 \item{alpha}{the alpha parameter}
 
 \item{eta}{the eta parameter}
+
+\item{...}{additional parameters to be passed to the LDA control}
 }
 \value{
 A fitted LDA model (see \code{\link{LDA}})

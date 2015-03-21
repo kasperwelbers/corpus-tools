@@ -31,11 +31,12 @@ documentsums <- function(m, weight.by.dtm=NULL){
 #' @param num.iterations the number of iterations
 #' @param alpha the alpha parameter
 #' @param eta the eta parameter
+#' @param ... additional parameters to be passed to the LDA control
 #' @return A fitted LDA model (see \code{\link{LDA}})
 #' @export
-topmod.lda.fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250) {
+topmod.lda.fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, ...) {
   dtm = dtm[row_sums(dtm) > 0,col_sums(dtm) > 0]
-  m = LDA(dtm, k=K, method=method, control=list(iter=num.iterations, burnin=burnin, alpha=alpha, delta=eta))
+  m = LDA(dtm, k=K, method=method, control=list(iter=num.iterations, burnin=burnin, alpha=alpha, delta=eta, ...))
   m
 }
 
