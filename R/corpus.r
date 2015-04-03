@@ -1,4 +1,3 @@
-
 #' Cast data.frame to sparse matrix
 #' 
 #' Create a sparse matrix from matching vectors of row indices, column indices and values
@@ -8,19 +7,14 @@
 #' @param values a vector of the values for each (non-zero) cell: [i,j] = value
 #' @return a sparse matrix of the dgTMatrix class (\code{\link{Matrix}} package) 
 #' @export
-cast.sparse.matrix <- function(rows, columns, values=NULL) {
-  if(is.null(values)) values = rep(1, length(rows))
-  d = data.frame(rows=rows, columns=columns, values=values)
-  if(nrow(d) > nrow(unique(d[,c('rows','columns')]))){
-    message('(Duplicate row-column matches occured. Values of duplicates are added up)')
-    d = aggregate(values ~ rows + columns, d, FUN='sum')
-  }
-  unit_index = unique(d$rows)
-  char_index = unique(d$columns)
-  sm = spMatrix(nrow=length(unit_index), ncol=length(char_index),
-                match(d$rows, unit_index), match(d$columns, char_index), d$values)
-  rownames(sm) = unit_index
-  colnames(sm) = char_index
+cast.sparse.matrix <- function(rows, columns, values=rep(1, length(rows))) {
+  row_index = unique(rows)
+  col_index = unique(columns)
+  sm = spMatrix(nrow=length(row_index), ncol=length(col_index),
+                match(rows, row_index), match(columns, col_index), values)
+  sm = as(sm, 'dgCMatrix')
+  rownames(sm) = row_index
+  colnames(sm) = col_index
   sm
 }
 
@@ -54,14 +48,15 @@ dtm.create <- function(documents, terms, freqs=rep(1, length(documents))) {
 term.statistics <- function(dtm) {
   dtm = dtm[row_sums(dtm) > 0,col_sums(dtm) > 0]    # get rid of empty rows/columns
   vocabulary = colnames(dtm)
-  data.frame(term = vocabulary,
+  data.frame(term = as.character(vocabulary),
              characters = nchar(vocabulary),
              number = grepl("[0-9]", vocabulary),
              nonalpha = grepl("\\W", vocabulary),
              termfreq = col_sums(dtm),
              docfreq = col_sums(dtm > 0),
              reldocfreq = col_sums(dtm > 0) / nDocs(dtm),
-             tfidf = tapply(dtm$v/row_sums(dtm)[dtm$i], dtm$j, mean) * log2(nDocs(dtm)/col_sums(dtm > 0)))
+             tfidf = tapply(dtm$v/row_sums(dtm)[dtm$i], dtm$j, mean) * log2(nDocs(dtm)/col_sums(dtm > 0)),
+             stringsAsFactors=F)
 }
 
 #' Compute the chi^2 statistic for a 2x2 crosstab containing the values

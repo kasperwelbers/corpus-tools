@@ -12,8 +12,9 @@ Depends:
     reshape2,
     topicmodels,
     RColorBrewer,
-    wordcloud
-Description: Several convenient functions for bag-of-word type text analysis
+    wordcloud,
+    igraph
+Description: Functions and tutorials for bag-of-word type text analysis
     methods
 License: MIT
 URL: http://github.com/kasperwelbers/corpus-tools

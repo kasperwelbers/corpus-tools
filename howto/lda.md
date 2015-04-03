@@ -1,19 +1,10 @@
 
 
 
-Difference howto_latent_dirichlet_allocation.Rmd and this file
-========================================================
-This file is almost identical to howto_latent_dirichlet_allocation.Rmd.
-The difference is that this file uses the topicmodels package, whereas the other uses the lda package.
-Both packages offer LDA modelling, and both have certain advanges and disadvantages.
-At some point we might decide to only support one package.
-Note that at present some of the code is a bit messy and redundant, since we rather hastily copy-edited some functions to work with the topicmodels package.
-
-
 Latent Dirichlet Allocation
 ========================================================
 
-Topic modelling techniques such as Latent Dirichlet Allocation (LDA) can be a usefull tool for social scientists to analyze large amounts of natural language data. Algorithms for LDA are available in R, for instance in the `lda` package. In this howto we demonstrate several function in the `corpustools` package that we developed to facilitate the use of LDA, based on the `lda` package.
+Topic modelling techniques such as Latent Dirichlet Allocation (LDA) can be a usefull tool for social scientists to analyze large amounts of natural language data. Algorithms for LDA are available in R, for instance in the `topicmodels` package. In this howto we demonstrate several function in the `corpustools` package that facilitate the use of LDA using the `topicmodels` package.
 
 As a starting point we use a Document Term Matrix (dtm) in the `DocumentTermMatrix` format offered in the `tm` package. Note that we also offer a howto for creating the dtm. 
 
@@ -32,19 +23,44 @@ library(corpustools)
 ## Loading required package: RColorBrewer
 ## Loading required package: wordcloud
 ## Loading required package: Rcpp
+## Loading required package: scales
+## Loading required package: igraph
 ```
 
 ```r
-load("wos_comsci_dtm.rdata")  ## Abstracts in 10 communication sciences journals from Web of Science, with 'social network' as a topic, from 2000 till 2010
+data(sotu)  # state of the union speeches by Barack Obama and George H. Bush.
+head(sotu.tokens)
+```
+
+```
+##         word sentence  pos      lemma offset       aid id pos1 freq
+## 1         It        1  PRP         it      0 111541965  1    O    1
+## 2         is        1  VBZ         be      3 111541965  2    V    1
+## 3        our        1 PRP$         we      6 111541965  3    O    1
+## 4 unfinished        1   JJ unfinished     10 111541965  4    A    1
+## 5       task        1   NN       task     21 111541965  5    N    1
+## 6         to        1   TO         to     26 111541965  6    ?    1
+```
+
+```r
+sotu.tokens = sotu.tokens[sotu.tokens$pos1 %in% c("N", "M", "A"), ]  # only select nouns, proper nouns and adjectives.
+dtm = dtm.create(documents = sotu.tokens$aid, terms = sotu.tokens$lemma)
+```
+
+```
+## (Duplicate row-column matches occured. Values of duplicates are added up)
+```
+
+```r
 dtm
 ```
 
 ```
-## A document-term matrix (848 documents, 9753 terms)
+## A document-term matrix (1090 documents, 3976 terms)
 ## 
-## Non-/sparse entries: 84132/8186412
+## Non-/sparse entries: 25007/4308833
 ## Sparsity           : 99%
-## Maximal term length: 80 
+## Maximal term length: 35 
 ## Weighting          : term frequency (tf)
 ```
 
@@ -54,91 +70,85 @@ Not all terms are equally informative of the underlying semantic structures of t
 
 ```r
 termstats = term.statistics(dtm)
-termstats[sample(1:nrow(termstats), 10), ]
+head(termstats)
 ```
 
 ```
-##                                term characters number nonalpha termfreq
-## purported                 purported          9  FALSE    FALSE        1
-## 1995                           1995          4   TRUE    FALSE        4
-## conceptualization conceptualization         17  FALSE    FALSE        9
-## beneficial               beneficial         10  FALSE    FALSE       11
-## 21.7                           21.7          4   TRUE     TRUE        1
-## 40,000                       40,000          6   TRUE     TRUE        1
-## y                                 y          1  FALSE    FALSE        2
-## older                         older          5  FALSE    FALSE       45
-## cdma                           cdma          4  FALSE    FALSE        1
-## seminal                     seminal          7  FALSE    FALSE        1
-##                   docfreq reldocfreq   tfidf
-## purported               1   0.001179 0.07782
-## 1995                    4   0.004717 0.03742
-## conceptualization       8   0.009434 0.04978
-## beneficial             10   0.011792 0.03156
-## 21.7                    1   0.001179 0.03499
-## 40,000                  1   0.001179 0.02181
-## y                       1   0.001179 0.07483
-## older                  22   0.025943 0.06509
-## cdma                    1   0.001179 0.04462
-## seminal                 1   0.001179 0.03845
+##          term characters number nonalpha termfreq docfreq reldocfreq
+## 10th     10th          4   TRUE    FALSE        1       1  0.0009174
+## 110th   110th          5   TRUE    FALSE        1       1  0.0009174
+## 11th     11th          4   TRUE    FALSE       18      17  0.0155963
+## 1970     1970          4   TRUE    FALSE        1       1  0.0009174
+## 1990     1990          4   TRUE    FALSE        2       2  0.0018349
+## 1-year 1-year          6   TRUE     TRUE        1       1  0.0009174
+##         tfidf
+## 10th   0.3737
+## 110th  0.5606
+## 11th   0.2078
+## 1970   0.2968
+## 1990   0.2954
+## 1-year 0.3363
 ```
 
 
-We can now filter out words based on this information. In our example, we filter on terms that occur at least in two documents and that do not contain numbers. We also select only the 3000 terms with the highest tf-idf score (this is not a common standard. For large corpora it makes sense to include more terms). 
+We can now filter out words based on this information. In our example, we filter on terms that occur at least in five documents and that do not contain numbers. We also select only the 3000 terms with the highest tf-idf score (3000 is not a common standard. For large corpora it makes sense to include more terms). 
 
 
 ```r
-termstats = termstats[termstats$docfreq > 1 & termstats$number == F, ]
-voca = as.character(termstats[order(termstats$tfidf, decreasing = T), ][1:3000, 
-    "term"])
-filtered_dtm = dtm[, voca]  # select only the terms we want to keep
+termstats = termstats[termstats$docfreq >= 5 & termstats$number == F, ]
+filtered_dtm = dtm[, termstats$term]  # select only the terms we want to keep
 ```
 
 
-Now we are ready to fit the model! We made a wrapper called `topmod.lda.fit` for the `LDA` function in the `topicmodels` package. This wrapper really doesn't do anything interesting, except for deleting empty columns/rows from the dtm. The main reason for the wrapper is that we also used one for working with the other package that offers LDA modeling (for the use of the `lda.collapsed.gibbs.sampler` in the `lda` package some additional steps were required, so the wrapper makes more sense there)
+Now we are ready to fit the model! We made a wrapper called `lda.fit` for the `LDA` function in the `topicmodels` package. This wrapper doesn't do anything interesting, except for deleting empty columns/rows from the dtm, which can occur after filtering out words. 
 
 The main input for `topmod.lda.fit` is:
 - the document term matrix
 - K: the number of topics (this has to be defined a priori)
-- Optionally, it can be usefull to increase the number of iterations. This takes more time, but increases performance (to some point)
+- Optionally, it can be usefull to increase the number of iterations. This takes more time, but increases performance.
 
 
 ```r
-m = topmod.lda.fit(filtered_dtm, K = 30, num.iterations = 1000)
+m = lda.fit(filtered_dtm, K = 20, num.iterations = 1000)
 terms(m, 10)[, 1:5]  # show first 5 topics, with ten top words per topic
 ```
 
 ```
-##       Topic 1      Topic 2        Topic 3      Topic 4        Topic 5     
-##  [1,] "political"  "older"        "industry"   "science"      "adolescent"
-##  [2,] "blog"       "loneliness"   "digital"    "physical"     "channel"   
-##  [3,] "citizen"    "emotional"    "market"     "contact"      "resident"  
-##  [4,] "opinion"    "agent"        "production" "scientific"   "emergency" 
-##  [5,] "democratic" "core"         "music"      "intellectual" "minority"  
-##  [6,] "politics"   "desire"       "actor"      "domain"       "ethnic"    
-##  [7,] "choice"     "rule"         "he"         "home"         "risk"      
-##  [8,] "scholar"    "presentation" "reality"    "elderly"      "US"        
-##  [9,] "preference" "programme"    "producer"   "record"       "depressive"
-## [10,] "argument"   "South"        "software"   "carer"        "coordinate"
+##       Topic 1    Topic 2     Topic 3      Topic 4      Topic 5  
+##  [1,] "tax"      "more"      "people"     "America"    "world"  
+##  [2,] "business" "Americans" "nation"     "world"      "United" 
+##  [3,] "company"  "family"    "future"     "part"       "States" 
+##  [4,] "cut"      "percent"   "great"      "goal"       "weapon" 
+##  [5,] "small"    "million"   "America"    "commitment" "nuclear"
+##  [6,] "credit"   "money"     "history"    "Tonight"    "threat" 
+##  [7,] "one"      "growth"    "strong"     "support"    "regime" 
+##  [8,] "relief"   "rate"      "progress"   "Nation"     "Iran"   
+##  [9,] "bank"     "income"    "state"      "God"        "danger" 
+## [10,] "single"   "right"     "prosperity" "States"     "leader"
 ```
 
 
-We now have a fitted lda model. The terms function shows the most prominent words for each topic (we only selected the first 4 topics for convenience). 
+We now have a fitted lda model. The `terms` function shows the most prominent words for each topic (we only selected the first 5 topics for convenience). 
 
 One of the thing we can do with the LDA topics, is analyze how much attention they get over time, and how much they are used by different sources (e.g., people, newspapers, organizations). To do so, we need to match this article metadata. We can order the metadata to the documents in the LDA model by matching it to the documents slot.
 
 
 ```r
-load("wos_comsci_meta.rdata")
-colnames(meta)  # the id column matches the rownames of the dtm
+head(sotu.meta)
 ```
 
 ```
-## [1] "id"            "date"          "journal"       "length"       
-## [5] "journal.top10"
+##          id   medium     headline       date
+## 1 111541965 Speeches Barack Obama 2013-02-12
+## 2 111541995 Speeches Barack Obama 2013-02-12
+## 3 111542001 Speeches Barack Obama 2013-02-12
+## 4 111542006 Speeches Barack Obama 2013-02-12
+## 5 111542013 Speeches Barack Obama 2013-02-12
+## 6 111542018 Speeches Barack Obama 2013-02-12
 ```
 
 ```r
-meta = meta[match(m@documents, meta$id), ]
+meta = sotu.meta[match(m@documents, sotu.meta$id), ]
 ```
 
 
@@ -146,69 +156,104 @@ We can now do some plotting. First, we can make a wordcloud for a more fancy (an
 
 
 ```r
-topic_term_matrix = posterior(m)$terms
-topics.plot.wordcloud(topic_term_matrix, topic_nr = 1)
+lda.plot.wordcloud(m, topic_nr = 1)
 ```
 
-![plot of chunk unnamed-chunk-7](figures_lda_topmod/unnamed-chunk-7.png) 
+![plot of chunk unnamed-chunk-7](figures_lda/unnamed-chunk-71.png) 
+
+```r
+lda.plot.wordcloud(m, topic_nr = 2)
+```
+
+![plot of chunk unnamed-chunk-7](figures_lda/unnamed-chunk-72.png) 
 
 
-With `topics.plot.time` and `topics.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
+With `lda.plot.time` and `lda.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
 
 
 ```r
-topic_document_matrix = documentsums(m, weight.by.dtm = dtm)  # the documentsums function extracts a matrix identical to the documentsums slot of the output of the lda.collapsed.gibbs.sampler in the lda package. If the dtm is given in the weight.by.dtm parameter, then word-to-topic assignments are multiplied by the word occurence (which, I believe, is also what the lda package does)
-topics.plot.time(topic_document_matrix, 1, meta$date, date_interval = "month", 
-    value = "relative")
+lda.plot.time(m, 1, meta$date, date_interval = "year")
 ```
 
-![plot of chunk unnamed-chunk-8](figures_lda_topmod/unnamed-chunk-8.png) 
+![plot of chunk unnamed-chunk-8](figures_lda/unnamed-chunk-81.png) 
 
 ```r
-# Sidenote: the `return.values` argument can be set to TRUE to also let the
-# function output the values that are plotted.
+lda.plot.category(m, 1, meta$headline)
 ```
 
-
-In our example data, we can use the names of the journals as categories. However, since there are so many journals, this becomes messy. We therefore only look at the top.10 most frequent journals (in our sample) and categorize the rest as `other`.
-
-
-```r
-topics.plot.category(topic_document_matrix, 1, meta$journal.top10, value = "relative")
-```
-
-![plot of chunk unnamed-chunk-9](figures_lda_topmod/unnamed-chunk-9.png) 
-
-```r
-# Sidenote: the `return.values` argument can be set to TRUE to also let the
-# function output the values that are plotted.
-```
+![plot of chunk unnamed-chunk-8](figures_lda/unnamed-chunk-82.png) 
 
 
 It can be usefull to print all this information together. That is what the following function does.
 
 
 ```r
-topics.plot.topic(document_sums = topic_document_matrix, topics = topic_term_matrix, 
-    1, meta$date, meta$journal.top10, date_interval = "year", value = "relative")
+lda.plot.topic(m, 1, meta$date, meta$headline, date_interval = "year")
 ```
 
-![plot of chunk unnamed-chunk-10](figures_lda_topmod/unnamed-chunk-101.png) 
+![plot of chunk unnamed-chunk-9](figures_lda/unnamed-chunk-91.png) 
 
 ```r
-topics.plot.topic(document_sums = topic_document_matrix, topics = topic_term_matrix, 
-    2, meta$date, meta$journal.top10, date_interval = "year", value = "relative")
+lda.plot.topic(m, 2, meta$date, meta$headline, date_interval = "year")
 ```
 
-![plot of chunk unnamed-chunk-10](figures_lda_topmod/unnamed-chunk-102.png) 
+![plot of chunk unnamed-chunk-9](figures_lda/unnamed-chunk-92.png) 
+
+
+With the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
+
 
 ```r
-topics.plot.topic(document_sums = topic_document_matrix, topics = topic_term_matrix, 
-    10, meta$date, meta$journal.top10, date_interval = "year", value = "relative")
+tdtm = topicDtm(m, 2, ntopwords = 50)
 ```
 
-![plot of chunk unnamed-chunk-10](figures_lda_topmod/unnamed-chunk-103.png) 
+```
+## Error: could not find function "topicDtm"
+```
+
+```r
+g = adjacencyGraph(tdtm)
+```
+
+```
+## Error: could not find function "adjacencyGraph"
+```
+
+```r
+g = getBackboneNetwork(g, alpha = 1, max.vertices = 10)
+```
+
+```
+## Error: could not find function "getBackboneNetwork"
+```
+
+```r
+g = setNetworkAttributes(g)
+```
+
+```
+## Error: could not find function "setNetworkAttributes"
+```
+
+```r
+plot(g)
+```
+
+```
+## Error: object 'g' not found
+```
+
+```r
+backbone.alpha(g)
+```
+
+```
+## Error: could not find function "backbone.alpha"
+```
 
 
-Finally, with the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
+
+LDA topic networks
+========================================================
+
 

@@ -1,5 +1,6 @@
 
 
+
 Comparing corpora
 -----------------
 
@@ -21,23 +22,25 @@ library(corpustools)
 ## Loading required package: Matrix
 ## Loading required package: lda
 ## Loading required package: tm
-## Loading required package: NLP
 ## Loading required package: reshape2
 ## Loading required package: topicmodels
 ## Loading required package: RColorBrewer
 ## Loading required package: wordcloud
+## Loading required package: Rcpp
 ```
 
 ```r
-data('wikinews_iraq')
+data("wikinews_iraq")
 iraq.dtm
 ```
 
 ```
-## <<DocumentTermMatrix (documents: 674, terms: 10707)>>
+## A document-term matrix (674 documents, 10707 terms)
+## 
 ## Non-/sparse entries: 68649/7147869
 ## Sparsity           : 99%
-## Maximal term length: 369
+## Maximal term length: 369 
+## Weighting          : term frequency (tf)
 ```
 
 ```r
@@ -54,6 +57,7 @@ head(iraq.meta)
 ## 6 81112686 2009-08-12 Wikinews    244 2009-01-01 2009-08-01 2009-08-10
 ```
 
+
 For example, lets split our corpus into those articles that mention Bush and those that do not:
 
 
@@ -66,10 +70,11 @@ ncol(iraq.dtm)
 ```
 
 ```r
-w = as.matrix(iraq.dtm[,"Bush"])
-dtm.bush = iraq.dtm[w>0, ]
-dtm.rest = iraq.dtm[w==0, ]
+w = as.matrix(iraq.dtm[, "Bush"])
+dtm.bush = iraq.dtm[w > 0, ]
+dtm.rest = iraq.dtm[w == 0, ]
 ```
+
 
 To compare two corpora, the function `compare.corpora` is provided. 
 This gives a list of the words that occur 'too much' in the articles mentioning Bush,
@@ -81,7 +86,7 @@ and sorts them by chi-squared:
 ```r
 terms = corpora.compare(dtm.bush, dtm.rest)
 over = terms[terms$over > 1, ]
-over = over[order(-over$chi),]
+over = over[order(-over$chi), ]
 head(over)
 ```
 
@@ -102,12 +107,13 @@ head(over)
 ## 3937  175.0
 ```
 
+
 To list the underrepresented words, simply reverse the filter:
 
 
 ```r
 under = terms[terms$over < 1, ]
-under = under[order(-under$chi),]
+under = under[order(-under$chi), ]
 head(under)
 ```
 
@@ -122,6 +128,7 @@ head(under)
 ```
 
 
+
 What can be seen from these two word lists is that the articles mentioning Bush are more political in nature,
 while the other articles describe more (military) action. 
 
@@ -132,19 +139,21 @@ We can also create a word cloud from these terms. In this case, we specify a squ
 
 
 ```r
-dtm.wordcloud(dtm.bush, freq.fun=sqrt)
+dtm.wordcloud(dtm.bush, freq.fun = sqrt)
 ```
 
 ![plot of chunk unnamed-chunk-6](figures_compare/unnamed-chunk-6.png) 
+
 
 Another option is to base the word cloud not on the most common terms in the articles mentioning Bush, but rather on the most typical words. This can be done by basing the word cloud on the overrepresentation or chi-square values rather than the frequency:
 
 
 ```r
-dtm.wordcloud(terms=under$term, freqs=under$chi)
+dtm.wordcloud(terms = under$term, freqs = under$chi)
 ```
 
 ![plot of chunk unnamed-chunk-7](figures_compare/unnamed-chunk-7.png) 
+
 
 Combining with metadata
 -----
@@ -155,10 +164,10 @@ For example, the following uses the article metadata to compare vocabulary after
 
 ```r
 iraq.meta = iraq.meta[match(rownames(iraq.dtm), iraq.meta$id), ]
-dtm.before = iraq.dtm[iraq.meta$date < as.Date('2012-01-01'),]
-dtm.after = iraq.dtm[iraq.meta$date >= as.Date('2012-01-01'),]
+dtm.before = iraq.dtm[iraq.meta$date < as.Date("2012-01-01"), ]
+dtm.after = iraq.dtm[iraq.meta$date >= as.Date("2012-01-01"), ]
 terms = corpora.compare(dtm.after, dtm.before)
-terms = terms[order(-terms$chi),]
+terms = terms[order(-terms$chi), ]
 head(terms[terms$over > 1, ])
 ```
 
@@ -185,6 +194,7 @@ head(terms[terms$over < 1, ])
 ## 3925 journalist         57        108 9.190e-04 0.0023795 0.5679 36.44
 ## 3604   incident         41         88 6.611e-04 0.0019388 0.5652 35.67
 ```
+
 
 So, the latter articles mention the Islam and Turkey more frequently, 
 while the earlier articles feature the war crimes reported by journalist Ford. 

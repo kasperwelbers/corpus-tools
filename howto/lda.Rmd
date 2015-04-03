@@ -2,25 +2,19 @@
 opts_chunk$set(fig.path = "figures_lda/")
 ```
 
-Difference howto_latent_dirichlet_allocation.Rmd and this file
-========================================================
-This file is almost identical to howto_latent_dirichlet_allocation.Rmd.
-The difference is that this file uses the topicmodels package, whereas the other uses the lda package.
-Both packages offer LDA modelling, and both have certain advanges and disadvantages.
-At some point we might decide to only support one package.
-Note that at present some of the code is a bit messy and redundant, since we rather hastily copy-edited some functions to work with the topicmodels package.
-
-
 Latent Dirichlet Allocation
 ========================================================
 
-Topic modelling techniques such as Latent Dirichlet Allocation (LDA) can be a usefull tool for social scientists to analyze large amounts of natural language data. Algorithms for LDA are available in R, for instance in the `lda` package. In this howto we demonstrate several function in the `corpustools` package that we developed to facilitate the use of LDA, based on the `lda` package.
+Topic modelling techniques such as Latent Dirichlet Allocation (LDA) can be a usefull tool for social scientists to analyze large amounts of natural language data. Algorithms for LDA are available in R, for instance in the `topicmodels` package. In this howto we demonstrate several function in the `corpustools` package that facilitate the use of LDA using the `topicmodels` package.
 
 As a starting point we use a Document Term Matrix (dtm) in the `DocumentTermMatrix` format offered in the `tm` package. Note that we also offer a howto for creating the dtm. 
 
 ```{r}
 library(corpustools)
-load('wos_comsci_dtm.rdata') ## Abstracts in 10 communication sciences journals from Web of Science, with 'social network' as a topic, from 2000 till 2010
+data(sotu) # state of the union speeches by Barack Obama and George H. Bush.
+head(sotu.tokens)
+sotu.tokens = sotu.tokens[sotu.tokens$pos1 %in% c('N','M','A'),] # only select nouns, proper nouns and adjectives.
+dtm = dtm.create(documents=sotu.tokens$aid, terms=sotu.tokens$lemma)
 dtm
 ```
 
@@ -28,68 +22,57 @@ Not all terms are equally informative of the underlying semantic structures of t
 
 ```{r}
 termstats = term.statistics(dtm)
-termstats[sample(1:nrow(termstats), 10),]
+head(termstats)
 ```
 
-We can now filter out words based on this information. In our example, we filter on terms that occur at least in two documents and that do not contain numbers. We also select only the 3000 terms with the highest tf-idf score (this is not a common standard. For large corpora it makes sense to include more terms). 
+We can now filter out words based on this information. In our example, we filter on terms that occur at least in five documents and that do not contain numbers. We also select only the 3000 terms with the highest tf-idf score (3000 is not a common standard. For large corpora it makes sense to include more terms). 
 
 ```{r}
-termstats = termstats[termstats$docfreq > 1 & termstats$number==F,]
-voca = as.character(termstats[order(termstats$tfidf, decreasing=T),][1:3000,'term'])
-filtered_dtm = dtm[,voca] # select only the terms we want to keep
+termstats = termstats[termstats$docfreq >= 5 & termstats$number==F,]
+filtered_dtm = dtm[,termstats$term] # select only the terms we want to keep
 ```
 
-Now we are ready to fit the model! We made a wrapper called `topmod.lda.fit` for the `LDA` function in the `topicmodels` package. This wrapper really doesn't do anything interesting, except for deleting empty columns/rows from the dtm. The main reason for the wrapper is that we also used one for working with the other package that offers LDA modeling (for the use of the `lda.collapsed.gibbs.sampler` in the `lda` package some additional steps were required, so the wrapper makes more sense there)
+Now we are ready to fit the model! We made a wrapper called `lda.fit` for the `LDA` function in the `topicmodels` package. This wrapper doesn't do anything interesting, except for deleting empty columns/rows from the dtm, which can occur after filtering out words. 
 
 The main input for `topmod.lda.fit` is:
 - the document term matrix
 - K: the number of topics (this has to be defined a priori)
-- Optionally, it can be usefull to increase the number of iterations. This takes more time, but increases performance (to some point)
+- Optionally, it can be usefull to increase the number of iterations. This takes more time, but increases performance.
 
 ```{r}
-m = topmod.lda.fit(filtered_dtm, K=30, num.iterations=1000)
+m = lda.fit(filtered_dtm, K=20, num.iterations=1000)
 terms(m, 10)[,1:5] # show first 5 topics, with ten top words per topic
 ```
 
-We now have a fitted lda model. The terms function shows the most prominent words for each topic (we only selected the first 4 topics for convenience). 
+We now have a fitted lda model. The `terms` function shows the most prominent words for each topic (we only selected the first 5 topics for convenience). 
 
 One of the thing we can do with the LDA topics, is analyze how much attention they get over time, and how much they are used by different sources (e.g., people, newspapers, organizations). To do so, we need to match this article metadata. We can order the metadata to the documents in the LDA model by matching it to the documents slot.
 
 ```{r}
-load('wos_comsci_meta.rdata')
-colnames(meta) # the id column matches the rownames of the dtm
-meta = meta[match(m@documents, meta$id),]
+head(sotu.meta)
+meta = sotu.meta[match(m@documents, sotu.meta$id),]
 ```
 
 We can now do some plotting. First, we can make a wordcloud for a more fancy (and actually quite informative and intuitive) representation of the top words of a topic.
 
 ```{r, message=F, warning=FALSE, fig.width=6, fig.height=6}
-topic_term_matrix = posterior(m)$terms 
-topics.plot.wordcloud(topic_term_matrix, topic_nr=1)
+lda.plot.wordcloud(m, topic_nr=1)
+lda.plot.wordcloud(m, topic_nr=2)
 ```
 
-With `topics.plot.time` and `topics.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
+With `lda.plot.time` and `lda.plot.category`, we can plot the salience of the topic over time and for a given categorical variable.
 
 ```{r}
-topic_document_matrix = documentsums(m, weight.by.dtm=dtm) # the documentsums function extracts a matrix identical to the documentsums slot of the output of the lda.collapsed.gibbs.sampler in the lda package. If the dtm is given in the weight.by.dtm parameter, then word-to-topic assignments are multiplied by the word occurence (which, I believe, is also what the lda package does)
-topics.plot.time(topic_document_matrix, 1, meta$date, date_interval='month', value='relative')
-# Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
-```
-
-In our example data, we can use the names of the journals as categories. However, since there are so many journals, this becomes messy. We therefore only look at the top.10 most frequent journals (in our sample) and categorize the rest as `other`.
-
-```{r}
-topics.plot.category(topic_document_matrix, 1, meta$journal.top10, value='relative')
-# Sidenote: the `return.values` argument can be set to TRUE to also let the function output the values that are plotted.
+lda.plot.time(m, 1, meta$date, date_interval='year')
+lda.plot.category(m, 1, meta$headline)
 ```
 
 It can be usefull to print all this information together. That is what the following function does.
 
 ```{r, message=F, warning=FALSE, fig.width=10, fig.height=10}
-topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 1, meta$date, meta$journal.top10, date_interval='year', value='relative')
-topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 2, meta$date, meta$journal.top10, date_interval='year', value='relative')
-topics.plot.topic(document_sums=topic_document_matrix, topics=topic_term_matrix, 10, meta$date, meta$journal.top10, date_interval='year', value='relative')
+lda.plot.topic(m, 1, meta$date, meta$headline, date_interval='year')
+lda.plot.topic(m, 2, meta$date, meta$headline, date_interval='year')
 ```
 
-Finally, with the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
+With the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
 

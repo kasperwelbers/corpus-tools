@@ -1,5 +1,6 @@
 
 
+
 The Document-Term Matrix (dtm)
 ========================================================
 
@@ -8,35 +9,39 @@ For many methods of text analysis, specifically the so-called bag-of-word approa
 For example, in this dtm we can see how often the words 'spam', 'bacon', and 'egg', occured in each of the 4 documents:
 
 ```r
-m = matrix(sample(0:2, replace=T, 12), ncol=3, dimnames=list(documents=c('doc1','doc2','doc3','doc4'), terms=c('spam','bacon','egg')))
+m = matrix(sample(0:2, replace = T, 12), ncol = 3, dimnames = list(documents = c("doc1", 
+    "doc2", "doc3", "doc4"), terms = c("spam", "bacon", "egg")))
 m
 ```
 
 ```
 ##          terms
 ## documents spam bacon egg
-##      doc1    2     2   1
-##      doc2    2     1   1
-##      doc3    0     1   2
-##      doc4    2     0   1
+##      doc1    0     2   2
+##      doc2    1     0   0
+##      doc3    0     2   0
+##      doc4    2     2   1
 ```
+
 
 Commonly, this matrix is very sparse. That is, a large majority of the values will be zero, since documents generally only use a small portion of the words used in the entire corpus. For efficient computing and data storage, it is therefore worthwhile to not simply use a matrix, but a type of sparse matrix. We suggest the use of the `DocumentTermMatrix` class that is available in the `tm` (text mining) package. This is a type of sparse matrix dedicated to text analysis.
 
 
 ```r
 library(tm)
-dtm = as.DocumentTermMatrix(m, weight=weightTf)
+dtm = as.DocumentTermMatrix(m, weight = weightTf)
 dtm
 ```
 
 ```
-## <<DocumentTermMatrix (documents: 4, terms: 3)>>
-## Non-/sparse entries: 10/2
-## Sparsity           : 17%
-## Maximal term length: 5
+## A document-term matrix (4 documents, 3 terms)
+## 
+## Non-/sparse entries: 7/5
+## Sparsity           : 42%
+## Maximal term length: 5 
 ## Weighting          : term frequency (tf)
 ```
+
 
 Since the `tm` package is quite popular, this dtm class is compatible with various packages for text analysis. For many of the functions offered in the `corpustools` package we also use this dtm class as a starting point. In the next steps of this howto we provide some pointers for importing your data and transforming it into a dtm.
 
@@ -63,16 +68,19 @@ library(RTextTools)
 ```
 
 ```r
-create_matrix(c("One document", "And another"), removeStopwords=T, stemWords=T, language="english")
+create_matrix(c("One document", "And another"), removeStopwords = T, stemWords = T, 
+    language = "english")
 ```
 
 ```
-## <<DocumentTermMatrix (documents: 2, terms: 3)>>
+## A document-term matrix (2 documents, 3 terms)
+## 
 ## Non-/sparse entries: 3/3
 ## Sparsity           : 50%
-## Maximal term length: 8
+## Maximal term length: 8 
 ## Weighting          : term frequency (tf)
 ```
+
 
 Creating the Document-Term Matrix from tokens
 ========================================================
@@ -99,6 +107,7 @@ library(corpustools)
 ## Loading required package: topicmodels
 ## Loading required package: RColorBrewer
 ## Loading required package: wordcloud
+## Loading required package: Rcpp
 ```
 
 ```r
@@ -116,39 +125,44 @@ head(sotu.tokens)
 ## 6         to        1   TO         to     26 111541965  6    ?    1
 ```
 
+
 To our awareness, `tm` has no functions to directly transform this data format into a `DocumentTermMatrix`, but it can quite easily be casted into a sparse matrix, and then transformed into a dtm. The `dtm.create` function, offered in the `corpustools` package, can do this for you. For our example, we use the [lemma](http://en.wikipedia.org/wiki/Lemma_(morphology)) of the words. In the `dtm.create` function we simply give the vector for the lemma, together with a vector indicating in which documents the lemma occured (aid).
 
 
 
 ```r
-dtm = dtm.create(documents=sotu.tokens$aid, terms=sotu.tokens$lemma)
+dtm = dtm.create(documents = sotu.tokens$aid, terms = sotu.tokens$lemma)
 dtm
 ```
 
 ```
-## <<DocumentTermMatrix (documents: 1090, terms: 5264)>>
+## A document-term matrix (1090 documents, 5264 terms)
+## 
 ## Non-/sparse entries: 60617/5677143
 ## Sparsity           : 99%
-## Maximal term length: 35
+## Maximal term length: 35 
 ## Weighting          : term frequency (tf)
 ```
+
 
 Since we are normally not interested in punctuation, prepositions and the like, we can filter the data set on part-of-speech tag, for example keeping only the nouns:
 
 
 ```r
-tokens = sotu.tokens[sotu.tokens$pos1 == 'N', ]
-dtm = dtm.create(documents=tokens$aid, terms=tokens$lemma)
+tokens = sotu.tokens[sotu.tokens$pos1 == "N", ]
+dtm = dtm.create(documents = tokens$aid, terms = tokens$lemma)
 dtm
 ```
 
 ```
-## <<DocumentTermMatrix (documents: 1078, terms: 2210)>>
+## A document-term matrix (1078 documents, 2210 terms)
+## 
 ## Non-/sparse entries: 15945/2366435
 ## Sparsity           : 99%
-## Maximal term length: 17
+## Maximal term length: 17 
 ## Weighting          : term frequency (tf)
 ```
+
 
 
 As you can see, we now have 2210 unique terms rather than 5264. 
@@ -161,6 +175,7 @@ dtm.wordcloud(dtm)
 ```
 
 ![plot of chunk unnamed-chunk-8](figures_dtm/unnamed-chunk-8.png) 
+
 
 For more information on how to work with `dtm`s using corpustools, please see the other howto's:
 
