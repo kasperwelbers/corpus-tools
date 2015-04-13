@@ -23,7 +23,6 @@ library(corpustools)
 ## Loading required package: RColorBrewer
 ## Loading required package: wordcloud
 ## Loading required package: Rcpp
-## Loading required package: scales
 ## Loading required package: igraph
 ```
 
@@ -45,13 +44,6 @@ head(sotu.tokens)
 ```r
 sotu.tokens = sotu.tokens[sotu.tokens$pos1 %in% c("N", "M", "A"), ]  # only select nouns, proper nouns and adjectives.
 dtm = dtm.create(documents = sotu.tokens$aid, terms = sotu.tokens$lemma)
-```
-
-```
-## (Duplicate row-column matches occured. Values of duplicates are added up)
-```
-
-```r
 dtm
 ```
 
@@ -74,20 +66,20 @@ head(termstats)
 ```
 
 ```
-##          term characters number nonalpha termfreq docfreq reldocfreq
-## 10th     10th          4   TRUE    FALSE        1       1  0.0009174
-## 110th   110th          5   TRUE    FALSE        1       1  0.0009174
-## 11th     11th          4   TRUE    FALSE       18      17  0.0155963
-## 1970     1970          4   TRUE    FALSE        1       1  0.0009174
-## 1990     1990          4   TRUE    FALSE        2       2  0.0018349
-## 1-year 1-year          6   TRUE     TRUE        1       1  0.0009174
-##         tfidf
-## 10th   0.3737
-## 110th  0.5606
-## 11th   0.2078
-## 1970   0.2968
-## 1990   0.2954
-## 1-year 0.3363
+##                  term characters number nonalpha termfreq docfreq
+## unfinished unfinished         10  FALSE    FALSE        5       5
+## task             task          4  FALSE    FALSE       15      15
+## basic           basic          5  FALSE    FALSE       23      23
+## bargain       bargain          7  FALSE    FALSE        2       2
+## country       country          7  FALSE    FALSE      228     202
+## idea             idea          4  FALSE    FALSE       36      34
+##            reldocfreq  tfidf
+## unfinished   0.004587 0.5857
+## task         0.013761 0.3172
+## basic        0.021101 0.2313
+## bargain      0.001835 0.6944
+## country      0.185321 0.1083
+## idea         0.031193 0.2277
 ```
 
 
@@ -114,17 +106,17 @@ terms(m, 10)[, 1:5]  # show first 5 topics, with ten top words per topic
 ```
 
 ```
-##       Topic 1    Topic 2     Topic 3      Topic 4      Topic 5  
-##  [1,] "tax"      "more"      "people"     "America"    "world"  
-##  [2,] "business" "Americans" "nation"     "world"      "United" 
-##  [3,] "company"  "family"    "future"     "part"       "States" 
-##  [4,] "cut"      "percent"   "great"      "goal"       "weapon" 
-##  [5,] "small"    "million"   "America"    "commitment" "nuclear"
-##  [6,] "credit"   "money"     "history"    "Tonight"    "threat" 
-##  [7,] "one"      "growth"    "strong"     "support"    "regime" 
-##  [8,] "relief"   "rate"      "progress"   "Nation"     "Iran"   
-##  [9,] "bank"     "income"    "state"      "God"        "danger" 
-## [10,] "single"   "right"     "prosperity" "States"     "leader"
+##       Topic 1     Topic 2   Topic 3       Topic 4    Topic 5      
+##  [1,] "child"     "other"   "life"        "program"  "people"     
+##  [2,] "school"    "country" "day"         "money"    "time"       
+##  [3,] "education" "many"    "man"         "system"   "first"      
+##  [4,] "college"   "work"    "woman"       "Security" "same"       
+##  [5,] "student"   "citizen" "hope"        "reform"   "state"      
+##  [6,] "community" "dream"   "opportunity" "Social"   "strong"     
+##  [7,] "high"      "past"    "progress"    "worker"   "crisis"     
+##  [8,] "sure"      "service" "young"       "Medicare" "rule"       
+##  [9,] "higher"    "society" "human"       "drug"     "institution"
+## [10,] "parent"    "word"    "everything"  "benefit"  "spirit"
 ```
 
 
@@ -201,59 +193,4 @@ lda.plot.topic(m, 2, meta$date, meta$headline, date_interval = "year")
 
 
 With the `topics.plot.alltopics` function all topics can be visualized and saved as images. This function words the same as `topics.plot.topic`, with an additional argument to specify the folder in which the images should be saved.
-
-
-```r
-tdtm = topicDtm(m, 2, ntopwords = 50)
-```
-
-```
-## Error: could not find function "topicDtm"
-```
-
-```r
-g = adjacencyGraph(tdtm)
-```
-
-```
-## Error: could not find function "adjacencyGraph"
-```
-
-```r
-g = getBackboneNetwork(g, alpha = 1, max.vertices = 10)
-```
-
-```
-## Error: could not find function "getBackboneNetwork"
-```
-
-```r
-g = setNetworkAttributes(g)
-```
-
-```
-## Error: could not find function "setNetworkAttributes"
-```
-
-```r
-plot(g)
-```
-
-```
-## Error: object 'g' not found
-```
-
-```r
-backbone.alpha(g)
-```
-
-```
-## Error: could not find function "backbone.alpha"
-```
-
-
-
-LDA topic networks
-========================================================
-
 
