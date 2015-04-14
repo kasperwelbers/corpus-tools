@@ -25,17 +25,45 @@ cast.sparse.matrix <- function(rows, columns, values=rep(1, length(rows))) {
 #' @param documents a vector of document names/ids
 #' @param terms a vector of words of the same length as documents
 #' @param freqs a vector of the frequency a a term in a document
+#' @param minfreq the minimum frequency of terms for inclusion. Defaults to 5, set to 0 to skip filtering
+#' @param minlength the minimum word length (number of characters) for inclusion, set to 0 to skip filtering
+#' @param filter.chars filter out any words containing numbers or non-word characters (defaults to True)
+#' @param filter an optional boolean vector of the length of documents whether each document should be included. Any additional filtering will be applied on to op this filter
 #' @return a document-term matrix  \code{\link{DocumentTermMatrix}}
 #' @export
-dtm.create <- function(documents, terms, freqs=rep(1, length(documents))) {
-  # remove NA terms
-  d = data.frame(ids=documents, terms=terms, freqs=freqs)
+dtm.create <- function (documents, terms, freqs = rep(1, length(documents)),
+                        minfreq=5, minlength=3, filter.chars=TRUE, filter=rep(T, length(documents))) 
+{
+  if (minfreq>0) {
+    t = table(terms)
+    filter = filter & terms %in% names(t)[t>=minfreq]
+  }
+  #TODO: this is not very efficient if terms is a large factor
+  if (minlength>0) filter = filter & nchar(as.character(terms)) >= minlength
+  if (filter.chars) filter = filter & !grepl("\\W|\\d", terms)
+  d = data.frame(ids = documents[filter], terms = terms[filter], freqs = freqs[filter])
   if (sum(is.na(d$terms)) > 0) {
     warning("Removing ", sum(is.na(d$terms)), "rows with missing term names")
     d = d[!is.na(d$terms), ]
   }
-  sparsemat = cast.sparse.matrix(rows=d$ids, columns=d$terms, values=d$freqs)
-  as.DocumentTermMatrix(sparsemat, weighting=weightTf)
+  sparsemat = cast.sparse.matrix(rows = d$ids, columns = d$terms, 
+                                 values = d$freqs)
+  as.DocumentTermMatrix(sparsemat, weighting = weightTf)
+}
+
+#' Filter a dtm by selecting documents or terms
+#' 
+#' Filters the dtm and removes any empty rows or columns
+#' 
+#' @param dtm the dtm to filter
+#' @param documents an optional vector of documents to include
+#' @param terms an optional  vector of terms to include
+#' @return the filtered dtm
+#' @export
+dtm.filter <- function(dtm, documents=NULL, terms=NULL) {
+  if (!is.null(terms)) dtm = dtm[, colnames(dtm) %in% terms]
+  if (!is.null(documents)) dtm = dtm[rownames(dtm) %in% documents,]
+  dtm[row_sums(dtm) > 0, col_sums(dtm) > 0]
 }
 
 #' Compute some useful corpus statistics for a dtm
