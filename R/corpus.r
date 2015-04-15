@@ -141,20 +141,19 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001) {
 #' @param pal the colour model, see RColorBrewer
 #' @export
 dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, pal=brewer.pal(6,"YlGnBu")) {
-  if(!is.null(dtm) & ncol(dtm) < nterms) nterms = ncol(dtm)
   if (!is.null(dtm)) {
     t = term.statistics(dtm)
     t = t[order(t$termfreq, decreasing=T), ]
     terms = t$term
     freqs = t$termfreq
   }
+  if (length(terms) < nterms) nterms = length(terms)
   if (!is.null(freq.fun)) freqs = freq.fun(freqs)
   if (!is.null(nterms)) {
     select = order(-freqs)[1:nterms]
     terms = terms[select] 
     freqs = freqs[select]
   }
-   
   if (is.null(terms) | is.null(freqs)) stop("Please provide dtm or terms and freqs")
   wordcloud(terms, freqs, 
           scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE, 
