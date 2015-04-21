@@ -1,0 +1,25 @@
+Compare multiple corpora
+========================================================
+
+The corpora.compare function is explained in the `compare` howto. Here we show how corpora.list.compare can be used to compare many corpora. 
+
+```{r}
+library(corpustools)
+data(sotu)
+dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
+meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
+
+permediumcomparison = corpora.list.compare(dtm, subcorpus=meta$headline)
+length(permediumcomparison)
+peryearcomparison = corpora.list.compare(dtm, subcorpus=meta$date, method='chain')
+length(peryearcomparison)
+
+# or using a dtm list as input
+dtm_list = splitDtm(dtm, subcorpus=meta$headline)
+permediumcomparison = corpora.list.compare(dtm_list)
+length(permediumcomparison)
+
+dtm_list = splitDtm(dtm, subcorpus=meta$date)
+peryearcomparison = corpora.list.compare(dtm_list, method='chain')
+length(peryearcomparison)
+```

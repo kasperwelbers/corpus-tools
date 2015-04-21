@@ -32,15 +32,21 @@ cast.sparse.matrix <- function(rows, columns, values=rep(1, length(rows))) {
 #' @return a document-term matrix  \code{\link{DocumentTermMatrix}}
 #' @export
 dtm.create <- function (documents, terms, freqs = rep(1, length(documents)),
-                        minfreq=5, minlength=3, filter.chars=TRUE, filter=rep(T, length(documents))) 
-{
+                        minfreq=5, minlength=3, filter.chars=TRUE, filter=rep(T, length(documents))) {
   if (minfreq>0) {
+    message('Ignoring words with frequency lower than ', minfreq)
     t = table(terms)
     filter = filter & terms %in% names(t)[t>=minfreq]
   }
   #TODO: this is not very efficient if terms is a large factor
-  if (minlength>0) filter = filter & nchar(as.character(terms)) >= minlength
-  if (filter.chars) filter = filter & !grepl("\\W|\\d", terms)
+  if (minlength>0) {
+    message('Ignoring words with less than ', minlength, ' characters')
+    filter = filter & nchar(as.character(terms)) >= minlength
+  }
+  if (filter.chars) {
+    message('Ignoring words that contain numbers of non-word characters')
+    filter = filter & !grepl("\\W|\\d", terms)
+  }
   d = data.frame(ids = documents[filter], terms = terms[filter], freqs = freqs[filter])
   if (sum(is.na(d$terms)) > 0) {
     warning("Removing ", sum(is.na(d$terms)), "rows with missing term names")
@@ -113,8 +119,8 @@ chi2 <- function(a,b,c,d) {
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
 corpora.compare <- function(dtm.x, dtm.y, smooth=.001) {
-  freqs = term.statistics(dtm.x)[, c("term", "termfreq")]
-  freqs.rel = term.statistics(dtm.y)[, c("term", "termfreq")]
+  freqs = data.frame(term=colnames(dtm.x), termfreq=col_sums(dtm.x))
+  freqs.rel = data.frame(term=colnames(dtm.y), termfreq=col_sums(dtm.y))
   f = merge(freqs, freqs.rel, all=T, by="term")    
   f[is.na(f)] = 0
   f$relfreq.x = f$termfreq.x / sum(freqs$termfreq)
@@ -158,4 +164,123 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
   wordcloud(terms, freqs, 
           scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE, 
           rot.per=rot.per, colors=pal)
+}
+
+
+#### expanding the compare dtm functions
+
+#' Split a dtm into a list.
+#' 
+#' Transform a dtm into a list containing the dtm in parts.
+#' 
+#' @param dtm a document-term matrix
+#' @param subcorpus a vector that matches the documents (rows) of the dtm. The dtm will be split into separate dtms for each value of subcorpus.
+#' @return A list of dtms, named after the split_by values
+#' @export
+splitDtm <- function(dtm, subcorpus) {
+  dtm_list = llply(unique(subcorpus), function(x) dtm[subcorpus == x,])
+  names(dtm_list) = unique(subcorpus)
+  dtm_list
+}
+
+#' Merge a list of dtm's
+#' 
+#' Merge a list of document term matrices, adding the attribute $subcorpus to indicate from which dtm a row originated.
+#' 
+#' @param dtm_list a list of document-term matrices
+#' @return A single dtm
+#' @export
+mergeDtmList <- function(dtm_list){
+  corpora = llply(dtm_list, dtmToSparseMatrix)
+  corpora = matchMatrixDims(corpora)
+  corpus = Reduce('+', corpora) # one matrix to represent them all
+  corpus = as.DocumentTermMatrix(corpus, weighting=weightTf)
+  dimnames(corpus) = dimnames(corpora[[1]])
+  
+  corpus_index = ldply(names(dtm_list), function(corpus_name) data.frame(corpus=corpus_name, id = rownames(dtm_list[[corpus_name]])))
+  corpus$subcorpus = corpus_index$corpus[match(rownames(corpus),corpus_index$id)]
+  corpus
+}
+
+#' Transform a dtm into a sparse matrix.
+#' 
+#' @param dtm a document-term matrix
+#' @return a sparse matrix
+#' @export
+dtmToSparseMatrix <- function(dtm){
+  sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
+  rownames(sm) = rownames(dtm)
+  colnames(sm) = colnames(dtm)
+  sm
+}
+
+#' Match the rows and columns of a list of matrices
+#' 
+#' Resets the rows and columns of a list of matrices so that each matrix has the same dimensions. 
+#' 
+#' @param matrices a list of matrices
+#' @return a list of matrices
+#' @export
+matchMatrixDims <- function(matrices){
+  rowdim = unlist(unique(llply(matrices, rownames)))
+  coldim = unlist(unique(llply(matrices, colnames)))
+  llply(matrices, setMatrixDims, rowdim=rowdim, coldim=coldim)
+}
+
+#' Set rows and columns of matrix to given rowdim and coldim vectors.
+#' 
+#' @param mat a matrix
+#' @param rowdim a vector with rownames.  
+#' @param coldim a vector with colnames.
+#' @return a list of matrices
+setMatrixDims <- function(mat, rowdim, coldim){
+  if(class(mat) == 'dgCMatrix') mat = as(mat, 'dgTMatrix')
+  if(class(mat) == 'lgCMatrix') mat = as(mat, 'lgTMatrix')
+  d = data.frame(i=rownames(mat)[mat@i+1], j=colnames(mat)[mat@j+1], v=mat@x) 
+  d = d[d$i %in% rowdim & d$j %in% coldim,]
+  d$i = match(d$i, rowdim)
+  d$j = match(d$j, coldim)
+  mat = spMatrix(length(rowdim), length(coldim), d$i, d$j, d$v)
+  rownames(mat) = rowdim
+  colnames(mat) = coldim
+  mat
+}
+
+eachToAllComparison <- function(dtm, corpus_ids, ...){
+  message('Comparing corpora (N=', length(corpus_ids),')')  
+  corpus_name = names(corpus_ids)[1]
+  corpus_ids
+  llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
+                                                                 dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+}
+
+chainComparison <- function(dtm, corpus_ids, chain.lag, ...){
+  message('Comparing corpora (N=', length(corpus_ids),')')
+  corpus_ids = corpus_ids[order(names(corpus_ids))]
+  llply(chain.lag:length(corpus_ids), function(i) corpora.compare(dtm[corpus_ids[[i]],], 
+                                                          dtm[unlist(corpus_ids[(i-chain.lag+1):(i-1)]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+}
+
+#' The corpora.compare function for a list of dtm's
+#' 
+#' @param x either a list of document term matrices, or a single dtm (in which cast the subcorpus argument must be given)
+#' @param subcorpus if x is a single dtm, subcorpus should be a vector of the length and order of the dtm rows. Each value of subcorpus then represents a separate corpus.
+#' @param method different ways to compare corpora. "each_to_all" compares each corpus to a corpos consisting of all other corpora. "chain" compares each corpus to a corpus consisting of the prevous [chain.lag] corpora. The order for chain comparison will be determined by sorting the dtm names (or the subcorpus values) with the order function.  
+#' @param return.df logical. If True, the results are returned as a data.frame. Otherwise as a list.
+#' @param chain.lag An integer. If method is 'chain', this determines the number of previous corpora to which a corpus is compared. For example: if 3, then each corpus will be compared to a corpus consisting of the 3 previous corpora. Note that the first [chain.lag] corpora cannot be calculated, and will be ignored.  
+#' @param ... additional arguments to be passed to the corpora.compare function
+#' @return a list or data.frame with the corpora.compare results for each dtm.  
+#' @export
+corpora.list.compare <- function(x, subcorpus=NULL, method='each_to_all', return.df=F, chain.lag=1, ...) {
+  if('list' %in% class(x)) {
+    x = mergeDtmList(x)
+    subcorpus = x$subcorpus
+  }  
+  corpus_ids = llply(unique(subcorpus), function(subcorpus_value) which(subcorpus == subcorpus_value))
+  names(corpus_ids) = unique(subcorpus)
+  
+  if(method == 'each_to_all') results = eachToAllComparison(x, corpus_ids, ...)
+  if(method == 'chain') results = chainComparison(x, corpus_ids, chain.lag, ...)
+  if(return.df) results = ldply(results, .id='corpus')
+  results
 }
