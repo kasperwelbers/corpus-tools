@@ -248,18 +248,21 @@ setMatrixDims <- function(mat, rowdim, coldim){
 
 eachToAllComparison <- function(dtm, corpus_ids, ...){
   message('Comparing corpora (N=', length(corpus_ids),')')  
-  corpus_name = names(corpus_ids)[1]
-  corpus_ids
-  llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
+  compare_results = llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
                                                                  dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+  names(compare_results) = names(corpus_ids)
+  compare_results
 }
 
 chainComparison <- function(dtm, corpus_ids, chain.lag, ...){
   message('Comparing corpora (N=', length(corpus_ids),')')
   corpus_ids = corpus_ids[order(names(corpus_ids))]
-  llply(chain.lag:length(corpus_ids), function(i) corpora.compare(dtm[corpus_ids[[i]],], 
-                                                          dtm[unlist(corpus_ids[(i-chain.lag+1):(i-1)]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+  compare_results = llply((chain.lag+1):length(corpus_ids), function(i) corpora.compare(dtm[corpus_ids[[i]],], 
+                                                          dtm[unlist(corpus_ids[(i-chain.lag):(i-1)]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+  names(compare_results) = names(corpus_ids)[(chain.lag+1):length(corpus_ids)]
+  compare_results
 }
+
 
 #' The corpora.compare function for a list of dtm's
 #' 
@@ -283,4 +286,12 @@ corpora.list.compare <- function(x, subcorpus=NULL, method='each_to_all', return
   if(method == 'chain') results = chainComparison(x, corpus_ids, chain.lag, ...)
   if(return.df) results = ldply(results, .id='corpus')
   results
+}
+
+#' @export
+corpcomp.wordcloud <- function(compare_results, nterms=25, ...){
+  compare_results = compare_results[compare_results$over > 1,]
+  compare_results = compare_results[order(-compare_results$chi),]
+  compare_results = head(compare_results, nterms)
+  dtm.wordcloud(terms=compare_results$term, freqs=compare_results$over, ...)
 }

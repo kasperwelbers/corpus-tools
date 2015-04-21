@@ -15,11 +15,15 @@ peryearcomparison = corpora.list.compare(dtm, subcorpus=meta$date, method='chain
 length(peryearcomparison)
 
 # or using a dtm list as input
-dtm_list = splitDtm(dtm, subcorpus=meta$headline)
-permediumcomparison = corpora.list.compare(dtm_list)
+dtm_list = splitDtm(dtm, subcorpus=meta$date)
+peryearcomparison = corpora.list.compare(dtm_list)
 length(permediumcomparison)
 
-dtm_list = splitDtm(dtm, subcorpus=meta$date)
-peryearcomparison = corpora.list.compare(dtm_list, method='chain')
-length(peryearcomparison)
+par(mar=c(0,0,2,0), mfrow=c(4,ceiling(length(compare_results)/4)))
+for(i in 1:length(compare_results)){
+  name = names(compare_results)[i]
+  corpcomp.wordcloud(compare_results[[i]], nterms)
+  title(main=name)
+}
+
 ```
