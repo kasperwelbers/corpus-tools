@@ -4,12 +4,12 @@
 \alias{splitDtm}
 \title{Split a dtm into a list.}
 \usage{
-splitDtm(dtm, split_by)
+splitDtm(dtm, subcorpus)
 }
 \arguments{
 \item{dtm}{a document-term matrix}
 
-\item{split_by}{a vector that matches the documents (rows) of the dtm. The dtm will be split into separate dtms for each value of split_by.}
+\item{subcorpus}{a vector that matches the documents (rows) of the dtm. The dtm will be split into separate dtms for each value of subcorpus.}
 }
 \value{
 A list of dtms, named after the split_by values

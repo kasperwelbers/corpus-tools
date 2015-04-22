@@ -183,107 +183,52 @@ splitDtm <- function(dtm, subcorpus) {
   dtm_list
 }
 
-#' Merge a list of dtm's
-#' 
-#' Merge a list of document term matrices, adding the attribute $subcorpus to indicate from which dtm a row originated.
-#' 
-#' @param dtm_list a list of document-term matrices
-#' @return A single dtm
-#' @export
-mergeDtmList <- function(dtm_list){
-  corpora = llply(dtm_list, dtmToSparseMatrix)
-  corpora = matchMatrixDims(corpora)
-  corpus = Reduce('+', corpora) # one matrix to represent them all
-  corpus = as.DocumentTermMatrix(corpus, weighting=weightTf)
-  dimnames(corpus) = dimnames(corpora[[1]])
-  
-  corpus_index = ldply(names(dtm_list), function(corpus_name) data.frame(corpus=corpus_name, id = rownames(dtm_list[[corpus_name]])))
-  corpus$subcorpus = corpus_index$corpus[match(rownames(corpus),corpus_index$id)]
-  corpus
-}
-
-#' Transform a dtm into a sparse matrix.
-#' 
-#' @param dtm a document-term matrix
-#' @return a sparse matrix
-#' @export
-dtmToSparseMatrix <- function(dtm){
-  sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
-  rownames(sm) = rownames(dtm)
-  colnames(sm) = colnames(dtm)
-  sm
-}
-
-#' Match the rows and columns of a list of matrices
-#' 
-#' Resets the rows and columns of a list of matrices so that each matrix has the same dimensions. 
-#' 
-#' @param matrices a list of matrices
-#' @return a list of matrices
-#' @export
-matchMatrixDims <- function(matrices){
-  rowdim = unlist(unique(llply(matrices, rownames)))
-  coldim = unlist(unique(llply(matrices, colnames)))
-  llply(matrices, setMatrixDims, rowdim=rowdim, coldim=coldim)
-}
-
-#' Set rows and columns of matrix to given rowdim and coldim vectors.
-#' 
-#' @param mat a matrix
-#' @param rowdim a vector with rownames.  
-#' @param coldim a vector with colnames.
-#' @return a list of matrices
-setMatrixDims <- function(mat, rowdim, coldim){
-  if(class(mat) == 'dgCMatrix') mat = as(mat, 'dgTMatrix')
-  if(class(mat) == 'lgCMatrix') mat = as(mat, 'lgTMatrix')
-  d = data.frame(i=rownames(mat)[mat@i+1], j=colnames(mat)[mat@j+1], v=mat@x) 
-  d = d[d$i %in% rowdim & d$j %in% coldim,]
-  d$i = match(d$i, rowdim)
-  d$j = match(d$j, coldim)
-  mat = spMatrix(length(rowdim), length(coldim), d$i, d$j, d$v)
-  rownames(mat) = rowdim
-  colnames(mat) = coldim
-  mat
-}
-
 eachToAllComparison <- function(dtm, corpus_ids, ...){
   message('Comparing corpora (N=', length(corpus_ids),')')  
   compare_results = llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
-                                                                 dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress='text') # compare each corpus to all corpora except itself.
+                                                                 dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress='text') 
   names(compare_results) = names(corpus_ids)
   compare_results
 }
 
-chainComparison <- function(dtm, corpus_ids, chain.lag, ...){
+unlistWindow <- function(list_object, i, window){
+  indices = i + window
+  indices = indices[indices > 0 & indices < length(list_object)]
+  unlist(list_object[indices], use.names=F)
+}
+
+windowComparison <- function(dtm, corpus_ids, window.size, ...){
+  window = -window.size:window.size
+  window = window[!window == 0]
   message('Comparing corpora (N=', length(corpus_ids),')')
   corpus_ids = corpus_ids[order(names(corpus_ids))]
-  compare_results = llply((chain.lag+1):length(corpus_ids), function(i) corpora.compare(dtm[corpus_ids[[i]],], 
-                                                          dtm[unlist(corpus_ids[(i-chain.lag):(i-1)]),], ...), .progress='text') # compare each corpus to all corpora except itself.
-  names(compare_results) = names(corpus_ids)[(chain.lag+1):length(corpus_ids)]
+  compare_results = llply(1:length(corpus_ids), function(i) corpora.compare(dtm[corpus_ids[[i]],], 
+                                                          dtm[unlistWindow(corpus_ids,i,window),], ...), .progress='text') 
+  names(compare_results) = names(corpus_ids)
   compare_results
 }
 
-
 #' The corpora.compare function for a list of dtm's
 #' 
-#' @param x either a list of document term matrices, or a single dtm (in which cast the subcorpus argument must be given)
+#' @param x either a named list of document term matrices, or a single dtm (in which cast the subcorpus argument must be given)
 #' @param subcorpus if x is a single dtm, subcorpus should be a vector of the length and order of the dtm rows. Each value of subcorpus then represents a separate corpus.
-#' @param method different ways to compare corpora. "each_to_all" compares each corpus to a corpos consisting of all other corpora. "chain" compares each corpus to a corpus consisting of the prevous [chain.lag] corpora. The order for chain comparison will be determined by sorting the dtm names (or the subcorpus values) with the order function.  
+#' @param method different ways to compare corpora. "each_to_all" compares each corpus to a corpos consisting of all other corpora. "window" compares each corpus to a corpus consisting of the previous and/or next corpora (see window.size). The order will be determined by sorting the dtm names (or the subcorpus values) with the order function.  
 #' @param return.df logical. If True, the results are returned as a data.frame. Otherwise as a list.
-#' @param chain.lag An integer. If method is 'chain', this determines the number of previous corpora to which a corpus is compared. For example: if 3, then each corpus will be compared to a corpus consisting of the 3 previous corpora. Note that the first [chain.lag] corpora cannot be calculated, and will be ignored.  
+#' @param window.size A vector of integers. If method is 'window', this determines which previous and next corpora are used to compare a corpus to. For example: if 3, then each corpus will be compared to a corpus consisting of the 3 previous and 3 next corpora. A corpus itself will not be used to create the comparison corpus. Note that the first and last [window.size] corpora cannot be compared to a full window.  
 #' @param ... additional arguments to be passed to the corpora.compare function
 #' @return a list or data.frame with the corpora.compare results for each dtm.  
 #' @export
-corpora.list.compare <- function(x, subcorpus=NULL, method='each_to_all', return.df=F, chain.lag=1, ...) {
+corpora.list.compare <- function(x, subcorpus=NULL, method='each_to_all', return.df=F, window.size=3, ...) {
   if('list' %in% class(x)) {
-    x = mergeDtmList(x)
-    subcorpus = x$subcorpus
+    subcorpus = rep(names(x), laply(x, nrow))
+    x = Reduce(c, x)
   }  
+  
   corpus_ids = llply(unique(subcorpus), function(subcorpus_value) which(subcorpus == subcorpus_value))
   names(corpus_ids) = unique(subcorpus)
   
   if(method == 'each_to_all') results = eachToAllComparison(x, corpus_ids, ...)
-  if(method == 'chain') results = chainComparison(x, corpus_ids, chain.lag, ...)
+  if(method == 'window') results = windowComparison(x, corpus_ids, window.size, ...)
   if(return.df) results = ldply(results, .id='corpus')
   results
 }

@@ -10,14 +10,12 @@ dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
 meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
 
 permediumcomparison = corpora.list.compare(dtm, subcorpus=meta$headline)
-length(permediumcomparison)
-peryearcomparison = corpora.list.compare(dtm, subcorpus=meta$date, method='chain')
-length(peryearcomparison)
+peryearcomparison = corpora.list.compare(dtm, subcorpus=meta$date, method='window')
 
 # or using a dtm list as input
 dtm_list = splitDtm(dtm, subcorpus=meta$date)
-peryearcomparison = corpora.list.compare(dtm_list)
-length(permediumcomparison)
+names(dtm_list)
+peryearcomparison = corpora.list.compare(dtm_list, method='window')
 
 par(mar=c(0,0,2,0), mfrow=c(4,ceiling(length(compare_results)/4)))
 for(i in 1:length(compare_results)){
