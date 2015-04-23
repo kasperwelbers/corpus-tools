@@ -9,19 +9,14 @@ data(sotu)
 dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
 meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
 
-permediumcomparison = corpora.list.compare(dtm, subcorpus=meta$headline)
-peryearcomparison = corpora.list.compare(dtm, subcorpus=meta$date, method='window')
+permediumcomparison = corpora.compare.list(dtm, subcorpus=meta$headline)
+peryearcomparison = corpora.compare.list(dtm, subcorpus=meta$date, method='window')
 
 # or using a dtm list as input
 dtm_list = splitDtm(dtm, subcorpus=meta$date)
 names(dtm_list)
-peryearcomparison = corpora.list.compare(dtm_list, method='window')
+peryearcomparison = corpora.compare.list(dtm_list, method='window')
 
-par(mar=c(0,0,2,0), mfrow=c(4,ceiling(length(compare_results)/4)))
-for(i in 1:length(compare_results)){
-  name = names(compare_results)[i]
-  corpcomp.wordcloud(compare_results[[i]], nterms)
-  title(main=name)
-}
+head(peryearcomparison[[1]])
 
 ```
