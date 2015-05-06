@@ -72,6 +72,34 @@ dtm.filter <- function(dtm, documents=NULL, terms=NULL) {
   dtm[row_sums(dtm) > 0, col_sums(dtm) > 0]
 }
 
+
+#' Split a dtm into a list.
+#' 
+#' Transform a dtm into a list containing the dtm in parts.
+#' 
+#' @param dtm a document-term matrix
+#' @param subcorpus a vector that matches the documents (rows) of the dtm. The dtm will be split into separate dtms for each value of subcorpus.
+#' @return A list of dtms, named after the split_by values
+#' @export
+splitDtm <- function(dtm, subcorpus) {
+  dtm_list = llply(unique(subcorpus), function(x) dtm[subcorpus == x,])
+  names(dtm_list) = unique(subcorpus)
+  dtm_list
+}
+
+
+
+#' Transform a dtm into a sparse matrix.
+#' 
+#' @param dtm a document-term matrix
+#' @return a sparse matrix
+dtmToSparseMatrix <- function(dtm){
+  sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
+  rownames(sm) = rownames(dtm)
+  colnames(sm) = colnames(dtm)
+  sm
+}
+
 #' Compute some useful corpus statistics for a dtm
 #' 
 #' Compute a number of useful statistics for filtering words: term frequency, idf, etc.
@@ -174,20 +202,6 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001, min.over=NULL, min.chi=NU
   f
 }
 
-#' Split a dtm into a list.
-#' 
-#' Transform a dtm into a list containing the dtm in parts.
-#' 
-#' @param dtm a document-term matrix
-#' @param subcorpus a vector that matches the documents (rows) of the dtm. The dtm will be split into separate dtms for each value of subcorpus.
-#' @return A list of dtms, named after the split_by values
-#' @export
-splitDtm <- function(dtm, subcorpus) {
-  dtm_list = llply(unique(subcorpus), function(x) dtm[subcorpus == x,])
-  names(dtm_list) = unique(subcorpus)
-  dtm_list
-}
-
 eachToAllComparison <- function(dtm, corpus_ids, ...){
   message('Comparing corpora (N=', length(corpus_ids),')')  
   compare_results = llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
@@ -199,7 +213,7 @@ eachToAllComparison <- function(dtm, corpus_ids, ...){
 #' @export
 unlistWindow <- function(list_object, i, window){
   indices = i + window
-  indices = indices[indices > 0 & indices < length(list_object)]
+  indices = indices[indices > 0 & indices <= length(list_object)]
   unlist(list_object[indices], use.names=F)
 }
 
@@ -247,88 +261,3 @@ corpcomp.wordcloud <- function(compare_results, nterms=25, ...){
   compare_results = head(compare_results, nterms)
   dtm.wordcloud(terms=compare_results$term, freqs=compare_results$over, ...)
 }
-
-## COMPARING DOCUMENTS
-
-getCosine <- function(m1, m2=m1){
-  norm.x = sqrt(Matrix::colSums(m1^2))
-  norm.y = sqrt(Matrix::colSums(m2^2))
-  mat = Matrix::crossprod(m1,m2)
-  mat = mat / Matrix::tcrossprod(norm.x, norm.y)
-  mat[is.na(mat)] = 0
-  mat
-}
-
-
-
-#' Transform a dtm into a sparse matrix.
-#' 
-#' @param dtm a document-term matrix
-#' @return a sparse matrix
-#' @export
-dtmToSparseMatrix <- function(dtm){
-  sm = Matrix::spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
-  rownames(sm) = rownames(dtm)
-  colnames(sm) = colnames(dtm)
-  sm
-}
-
-Nth.max <- function(x, N){
-  N = min(N, length(x)) 
-  -sort(-x, partial=N)[N]
-}
-
-#' Compare the documents in two corpora/dtms
-#' 
-#' Compare the documents in corpus dtm.x with reference corpus dtm.y. 
-#' 
-#' @param dtm.x the main document-term matrix
-#' @param dtm.y the 'reference' document-term matrix. If NULL, documents of dtm.x are compared to each ohter
-#' @param measure the measure that should be used to calculate similarity/distance/adjacency. Currently only cosine is supported
-#' @param min.similarity a threshold for similarity. lower values are deleted. Set to 0.1 by default.
-#' @param n.topsim An alternative or additional sort of threshold for similarity. Only keep the [n.topsim] highest similarity scores for x. Can return more than [n.topsim] similarity scores in the case of duplicate similarities.
-#' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
-#' @export
-documents.compare <- function(dtm.x, dtm.y=NULL, measure='cosine', min.similarity=0.1, n.topsim=NULL) {
-  dtm.x = Matrix::t(dtmToSparseMatrix(dtm.x))
-  dtm.y = if(is.null(dtm.y)) dtm.x else Matrix::t(dtmToSparseMatrix(dtm.y))
-  if(measure == 'cosine') results = getCosine(dtm.x, dtm.y)
-  
-  if(!is.null(min.similarity)) results@x[Matrix::which(results@x < min.similarity)] = 0
-  if(!is.null(n.topsim)) {
-    simthres = apply(results, 1, Nth.max, N=n.topsim)
-    results@x[Matrix::which(results < simthres)] = 0
-  }
-
-  results = as(results, 'dgTMatrix')
-  results = data.frame(x=colnames(dtm.x)[results@i+1], y=colnames(dtm.y)[results@j+1], similarity=results@x)
-  results = results[results$similarity > 0 & !is.na(results$similarity),]
-  results[!as.character(results$x) == as.character(results$y),]
-}
-
-#' Compare the documents in a dtm per time frame
-#' 
-#' Compare all documents within a document term matrix that are dated (e.g., pubished) within a given number of days (window.size) from each other.
-#' 
-#' @param dtm a document-term matrix in the tm format
-#' @param document.date a vector of date class, of the same length and order as the documents (rows) of the dtm.
-#' @param window.size the timeframe in days within which articles must occur in order to be compared. e.g., if 0, articles are only compared to articles of the same day. If 1, articles are compared to all articles of the previous, same or next day.
-#' @param measure the measure that should be used to calculate similarity/distance/adjacency. Currently only cosine is supported
-#' @param min.similarity a threshold for similarity. lower values are deleted
-#' @param n.topsim An alternative or additional sort of threshold for similarity. Only keep the [n.topsim] highest similarities for x.
-#' @return A data frame with columns x, y and similarity. 
-#' @export
-documents.window.compare <- function(dtm, document.date, window.size=3, measure='cosine', min.similarity=NULL, n.topsim=NULL, use.tfidf=F){
-  if(use.tfidf) dtm = weightTfIdf(dtm) 
-  days = as.Date(document.date)
-  dayseq = seq.Date(min(days), max(days), by=1)
-  day_ids = llply(dayseq, function(day) which(days == day))
-  
-  window = -window.size:window.size
-  nonempty_days = which(laply(day_ids, length) > 0)
-  ldply(nonempty_days, function(i) documents.compare(dtm[day_ids[[i]],], 
-                                                     dtm[unlistWindow(day_ids,i,window),], measure, min.similarity, n.topsim), .progress='text') 
-}
-
-
-

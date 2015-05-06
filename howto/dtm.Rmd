@@ -1,4 +1,5 @@
 ```{r, include=FALSE}
+library(knitr)
 opts_chunk$set(fig.path = "figures_dtm/")
 ```
 
@@ -73,7 +74,7 @@ dtm
 As you can see, we now have 2210 unique terms rather than 5264. 
 One of the cool things to do with a dtm is create a word cloud, which is made easy by the `dtm.wordcloud` function:
 
-```{r}
+```{r, warning=F}
 t = term.statistics(dtm)
 dtm.wordcloud(dtm)
 ```

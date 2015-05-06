@@ -7,7 +7,6 @@ Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends:
     slam,
     Matrix,
-    lda,
     tm,
     plyr,
     reshape2,

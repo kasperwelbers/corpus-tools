@@ -1,0 +1,35 @@
+Compare multiple corpora
+========================================================
+
+The corpora.compare function is explained in the `compare` howto. Here we show how corpora.list.compare can be used to compare many corpora. Also, we introduce the documents.compare and documents.window.compare functions. 
+
+This is currently under development. 
+
+```{r}
+library(corpustools)
+data(sotu)
+head(sotu.tokens)
+dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
+meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
+
+### comparing corpora ###
+permediumcomparison = corpora.compare.list(dtm, subcorpus=meta$headline)
+peryearcomparison = corpora.compare.list(dtm, subcorpus=meta$date, method='window')
+
+# or using a dtm list as input
+dtm_list = splitDtm(dtm, subcorpus=meta$date)
+names(dtm_list)
+peryearcomparison = corpora.compare.list(dtm_list, method='window')
+
+### comparing documents ###
+d = documents.compare(dtm, min.similarity=0.8)
+head(d)
+terms = getOverlapTerms(d$x, d$y, dtm.x=dtm)
+head(terms)
+
+# compare in windows (days)
+d = documents.window.compare(dtm, meta$date, window.size=2, window.direction='<', time.unit='days')
+head(d)
+
+
+```
