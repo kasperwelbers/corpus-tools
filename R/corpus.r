@@ -121,6 +121,69 @@ term.statistics <- function(dtm) {
              stringsAsFactors=F)
 }
 
+prepare.time.var <- function(time_var, time_interval){
+  if(class(time_var) == 'Date'){
+    if(time_interval == 'day') time_var = as.Date(format(time_var, '%Y-%m-%d'))
+    if(time_interval == 'week') time_var = as.Date(paste(format(time_var, '%Y-%W'),1), '%Y-%W %u')
+    if(time_interval == 'month') time_var = as.Date(paste(format(time_var, '%Y-%m'),'-01',sep=''))
+    if(time_interval == 'year') time_var = as.Date(paste(format(time_var, '%Y'),'-01-01',sep=''))
+  } 
+  time_var
+}
+
+#' Compute corpus statistics for term use over time
+#' 
+#' Compute corpus statistics for term use over time. Calculates the spearman's rank order correlation of a term's use over time with a vector that gradually increases over time.
+#' 
+#' @param dtm a document term matrix (e.g. the output of \code{\link{dtm.create}})
+#' @param document_date a vector with dates that matches the rows in dtm
+#' @param time_interval a character string indicating what time interval to use
+#' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
+#' @export
+term.time.statistics <- function(dtm, document_date, time_interval='day'){
+  document_date = prepare.time.var(meta$date, time_interval)
+  dateseq = seq.Date(min(document_date), max(document_date), by=time_interval)
+  i = document_date[dtm$i]
+  i = match(i, dateseq)
+  m = spMatrix(length(dateseq), ncol(dtm), i, dtm$j, dtm$v)
+  colnames(m) = colnames(dtm)
+  m = as(m, 'dgCMatrix')
+  
+  x = 1:nrow(m)  
+  N = Matrix::colSums(m)
+  timecor.total = apply(m, MARGIN = 2, function(y) cor(x, y, method = 'spearman'))
+  mean.total = apply(m, MARGIN = 2, mean)
+  sd.total = apply(m, MARGIN = 2, sd)
+  
+  m = m / Matrix:::rowSums(m)
+  timecor.rel = apply(m, MARGIN = 2, function(y) cor(x, y, method = 'spearman'))
+  mean.rel = apply(m, MARGIN = 2, mean)
+  sd.rel = apply(m, MARGIN = 2, sd)
+  
+  data.frame(term=colnames(m), N=N, mean.total, sd.total, mean.rel, sd.rel, timecor.total, timecor.rel)  
+}
+
+#' Plot a wordcloud with words ordered and coloured according to a dimension (x)
+#' 
+#' Plot a wordcloud with words ordered and coloured according to a dimension (x)
+#' 
+#' @return nothing
+#' @export
+plotWords <- function(x, y=NULL, words=NULL, wordfreq=NULL, xlab='', ylab='', yaxt='n', random.y=F, ...){
+  if(is.null(wordfreq)) wordfreq = rep(1, length(x))
+  wordsize = rescale(log(wordfreq), c(0.75,2))
+  if(is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.01), length(x))
+  if(is.null(y) & !random.y) y = wordsize
+  
+  xmargin = (max(x) - min(x))*0.2
+  ymargin = (max(y) - min(y))*0.2
+  xlim = c(min(x) - xmargin, max(x) + xmargin)
+  ylim = c(min(y) - ymargin, max(y) + ymargin)
+  plot(x, y, type="n", xlim=xlim, ylim=ylim, frame.plot = F, yaxt = yaxt, ylab=ylab, xlab=xlab, ...)
+  wl <- as.data.frame(wordlayout(x, y, words, cex=wordsize))
+  text(wl$x + .5*wl$width, wl$y+ .5*wl$ht, words, 
+       cex=wordsize, col=color.scale(x,c(1,2,0),c(0,1,1),0))
+}
 
 
 #' Plot a word cloud from a dtm
@@ -158,6 +221,8 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
           scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE, 
           rot.per=rot.per, colors=pal)
 }
+
+
 
 
 #### COMPARING CORPORA

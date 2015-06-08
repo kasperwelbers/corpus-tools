@@ -6,17 +6,50 @@ The corpora.compare function is explained in the `compare` howto. Here we show h
 ```{r}
 library(corpustools)
 data(sotu)
+sotu.tokens = sotu.tokens[sotu.tokens$pos1 %in% c('N','M','A'),]
 dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
 meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
 
-permediumcomparison = corpora.compare.list(dtm, subcorpus=meta$headline)
-peryearcomparison = corpora.compare.list(dtm, subcorpus=meta$date, method='window')
+permediumcomparison = corpora.compare.list(dtm, subcorpus=meta$headline) # compares each subcorpus to all others 
+names(permediumcomparison)
+head(permediumcomparison$'Barack Obama')
+
+peryearcomparison = corpora.compare.list(dtm, subcorpus=format(meta$date, '%Y'), method='window', window.size = 3) # compares each year to the surrounding 3 years. 
+names(peryearcomparison)
 
 # or using a dtm list as input
-dtm_list = splitDtm(dtm, subcorpus=meta$date)
+dtm_list = splitDtm(dtm, subcorpus=format(meta$date, '%Y'))
 names(dtm_list)
-peryearcomparison = corpora.compare.list(dtm_list, method='window')
+peryearcomparison = corpora.compare.list(dtm_list, method='window', window.size = 3)
 
-head(peryearcomparison[[1]])
+## Wordclouds with benefits (make sure plotting window is big enough)
+library(scales)
+library(plotrix)
+
+data(sotu)
+sotu.tokens = sotu.tokens[sotu.tokens$pos1 %in% c('M'),]
+dtm = dtm.create(sotu.tokens$aid, sotu.tokens$lemma)
+meta = sotu.meta[match(rownames(dtm), sotu.meta$id),]
+
+termtimestats = term.time.statistics(dtm, document_date = meta$date, time_interval = 'year')
+nrow(termtimestats)
+top = head(termtimestats[order(-termtimestats$N),], 50)
+
+x = top$timecor.rel
+words = rownames(top)
+wordfreq = top$N
+
+par(mar=c(10,3,10,3))
+plotWords(x, words=words, wordfreq=wordfreq)
+
+comp = permediumcomparison$'Barack Obama'
+comp = comp[comp$termfreq.x > 0,]
+comp = head(comp[order(-comp$chi),],50)
+par(mar=c(10,3,10,3))
+plotWords(comp$over, words=comp$term, wordfreq=comp$termfreq.x)
+plotWords(comp$over, words=comp$term, wordfreq=comp$termfreq.x, random.y=T)
+
+
+###
 
 ```
