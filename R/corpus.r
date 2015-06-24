@@ -256,8 +256,8 @@ corpora.compare <- function(dtm.x, dtm.y, smooth=.001, min.over=NULL, min.chi=NU
   freqs = data.frame(term=colnames(dtm.x), termfreq=col_sums(dtm.x))
   freqs.rel = data.frame(term=colnames(dtm.y), termfreq=col_sums(dtm.y))
   f = merge(freqs, freqs.rel, all=T, by="term")    
-  f = f[f$termfreq.x + f$termfreq.y > 0,]
   f[is.na(f)] = 0
+  f = f[f$termfreq.x + f$termfreq.y > 0,]
   f$relfreq.x = f$termfreq.x / sum(freqs$termfreq)
   f$relfreq.y = f$termfreq.y / sum(freqs.rel$termfreq)
   f$over = (f$relfreq.x + smooth) / (f$relfreq.y + smooth)
