@@ -7,7 +7,8 @@
 documents.window.compare(dtm, document.date, window.size = 3,
   time.unit = "days", window.direction = "<=>", measure = "cosine",
   min.similarity = NULL, n.topsim = NULL, only.from = NULL,
-  return.date = F, return.zeros = F, only.complete.window = F)
+  return.date = F, return.datedif = T, return.zeros = F,
+  only.complete.window = F)
 }
 \arguments{
 \item{dtm}{a document-term matrix in the tm format}

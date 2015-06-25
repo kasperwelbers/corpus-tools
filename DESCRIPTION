@@ -13,7 +13,9 @@ Depends:
     topicmodels,
     RColorBrewer,
     wordcloud,
-    igraph
+    igraph,
+    plotrix,
+    scales
 Description: Functions and tutorials for bag-of-word type text analysis
     methods
 License: MIT

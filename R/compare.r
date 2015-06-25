@@ -14,6 +14,11 @@ termOverlap <- function(m1, m2=m1){
   Matrix::crossprod(m1,m2)
 }
 
+termProduct <- function(m1, m2=m1){
+  #m2@x[Matrix::which(m2@x > 0)] = 1
+  Matrix::crossprod(m1,m2)
+}
+
 termOverlap_pct <- function(m1, m2=m1){
   totalterms = Matrix::colSums(as(m1, 'dgCMatrix'))
   m2@x[Matrix::which(m2@x > 0)] = 1
@@ -118,6 +123,7 @@ documents.compare <- function(dtm.x, dtm.y=NULL, measure='cosine', min.similarit
   if(measure == 'cosine') results = cosineSimilarity(m.x, m.y)
   if(measure == 'overlap') results = termOverlap(m.x, m.y)
   if(measure == 'overlap_pct') results = termOverlap_pct(m.x, m.y)
+  if(measure == 'product') results = termProduct(m.x, m.y)
   
   results = filterResults(results, min.similarity, n.topsim)
   
@@ -150,6 +156,7 @@ getWindow <- function(window.size, window.direction){
   if(window.direction == '<') window = -window.size:-1
   if(window.direction == '>=') window = 0:window.size
   if(window.direction == '>') window = 1:window.size
+  if(window.direction == '=') window = 0
   window
 }
 
@@ -172,7 +179,7 @@ getWindow <- function(window.size, window.direction){
 #' @param return.zeros If true, all comparison results are returned, including those with zero similarity (quite possibly the worst thing to do with large data)
 #' @return A data frame with columns x, y and similarity. If return.date == T, date.x and date.y are returned as well.
 #' @export
-documents.window.compare <- function(dtm, document.date, window.size=3, time.unit='days', window.direction='<=>', measure='cosine', min.similarity=NULL, n.topsim=NULL, only.from=NULL, return.date=F, return.zeros=F, only.complete.window=F){
+documents.window.compare <- function(dtm, document.date, window.size=3, time.unit='days', window.direction='<=>', measure='cosine', min.similarity=NULL, n.topsim=NULL, only.from=NULL, return.date=F, return.datedif=T, return.zeros=F, only.complete.window=F){
   message('Indexing articles by date/time')
   datetime = as.POSIXct(document.date)
   datetime = aggregateTimeUnits(datetime, time.unit)
@@ -192,18 +199,25 @@ documents.window.compare <- function(dtm, document.date, window.size=3, time.uni
   if(only.complete.window & '>' %in% window.direction) nonempty = nonempty[nonempty <= length(datetime_ids)-window.size]
   output = ldply(nonempty, function(i) ldply_documents.compare(i, dtm, datetime_ids, window, measure, min.similarity, n.topsim, only.from, return.zeros), .progress='text')
   output = output[,!colnames(output) == '.id']
-  if(return.date) {
+  if(return.date | return.datedif) {
     message('Matching document dates')
-    output$date.x = document.date[match(output$x, rownames(dtm))]
-    output$date.y = document.date[match(output$y, rownames(dtm))]
+    date.x = document.date[match(output$x, rownames(dtm))]
+    date.y = document.date[match(output$y, rownames(dtm))]
+    if(return.datedif){
+      output$daydif = difftime(date.y, date.x, units = 'days')
+    }
+    if(return.date){
+      output$date.x = date.x
+      output$date.y = date.y
+    }
   }
   output
 }
 
 ldply_documents.compare <- function(i, dtm, datetime_ids, window, measure, min.similarity, n.topsim, only.from, return.zeros){
   ## special function to be used in ldply in document.window.compare
-  dtm.x_indices = datetime_ids[[i]]
-  dtm.y_indices = unlistWindow(datetime_ids,i,window)
+  dtm.x_indices = unique(datetime_ids[[i]])
+  dtm.y_indices = unique(unlistWindow(datetime_ids,i,window))
   if(is.null(dtm.y_indices)) return(NULL)
   documents.compare(dtm[dtm.x_indices,], dtm[dtm.y_indices,], measure, min.similarity, n.topsim, only.from, return.zeros)
 }
