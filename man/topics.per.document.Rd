@@ -2,17 +2,19 @@
 % Please edit documentation in R/lda.r
 \name{topics.per.document}
 \alias{topics.per.document}
-\title{Get the topics per document, optionally merged with}
+\title{Get the topics per document}
 \usage{
-topics.per.document(topics)
+topics.per.document(m, as.wordassignments = F)
 }
 \arguments{
-\item{dtm}{a document term matrix (e.g. the output of \code{\link{dtm.create}})}
+\item{m}{A LDA model from the topicmodels package}
+
+\item{as.wordassignments}{If True, return the topic occurence per document as the number of words assigned to the topic (instead of the posterior distribution)}
 }
 \value{
 A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 }
 \description{
-Return a data frame containing article metadata and topic occurence per document
+Return a data frame containing article ids and topic occurence per document. Topic occurence can either be based on the posterior distrition (default) or based on wordassignments (as.wordassignments = T).
 }
 

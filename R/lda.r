@@ -39,16 +39,22 @@ lda.fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, e
   m
 }
 
-#' Get the topics per document, optionally merged with 
+#' Get the topics per document 
 #' 
-#' Return a data frame containing article metadata and topic occurence per document
+#' Return a data frame containing article ids and topic occurence per document. Topic occurence can either be based on the posterior distrition (default) or based on wordassignments (as.wordassignments = T). 
 #' 
-#' @param dtm a document term matrix (e.g. the output of \code{\link{dtm.create}})
+#' @param m A LDA model from the topicmodels package
+#' @param as.wordassignments If True, return the topic occurence per document as the number of words assigned to the topic (instead of the posterior distribution)
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
-topics.per.document <- function(topics) {
+topics.per.document <- function(m, as.wordassignments=F) {
   ids = as.numeric(m@documents)
-  cbind(id=ids, data.frame(posterior(m)$topics))
+  if(as.wordassignments) {
+    tpd = t(documentsums(m))
+  } else{
+    tpd = posterior(m)$topics  
+  }
+  cbind(id=ids, data.frame(tpd))
 }
 
 #' Add document meta to LDA output
