@@ -4,8 +4,18 @@
 \alias{plotWords}
 \title{Plot a wordcloud with words ordered and coloured according to a dimension (x)}
 \usage{
-plotWords(x, y = NULL, words = NULL, wordfreq = NULL, xlab = "",
-  ylab = "", yaxt = "n", random.y = F, ...)
+plotWords(x, y = NULL, words, wordfreq = rep(1, length(x)), xlab = "",
+  ylab = "", yaxt = "n", random.y = F, col = color.scale(x, c(1, 2, 0),
+  c(0, 1, 1), 0), ...)
+}
+\arguments{
+\item{x}{The (approximate) x positions of the words}
+
+\item{y}{The (approximate) y positions of the words}
+
+\item{words}{A character vector with the words to plot}
+
+\item{wordfreq}{The frequency of the words, defaulting to 1}
 }
 \value{
 nothing

@@ -167,10 +167,13 @@ term.time.statistics <- function(dtm, document_date, time_interval='day'){
 #' 
 #' Plot a wordcloud with words ordered and coloured according to a dimension (x)
 #' 
+#' @param x The (approximate) x positions of the words
+#' @param y The (approximate) y positions of the words
+#' @param words A character vector with the words to plot
+#' @param wordfreq The frequency of the words, defaulting to 1
 #' @return nothing
 #' @export
-plotWords <- function(x, y=NULL, words=NULL, wordfreq=NULL, xlab='', ylab='', yaxt='n', random.y=F, ...){
-  if(is.null(wordfreq)) wordfreq = rep(1, length(x))
+plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', random.y=F, col = color.scale(x, c(1, 2, 0), c(0, 1, 1), 0), ...){
   wordsize = rescale(log(wordfreq), c(0.75,2))
   if(is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.01), length(x))
   if(is.null(y) & !random.y) y = wordsize
@@ -181,8 +184,7 @@ plotWords <- function(x, y=NULL, words=NULL, wordfreq=NULL, xlab='', ylab='', ya
   ylim = c(min(y) - ymargin, max(y) + ymargin)
   plot(x, y, type="n", xlim=xlim, ylim=ylim, frame.plot = F, yaxt = yaxt, ylab=ylab, xlab=xlab, ...)
   wl <- as.data.frame(wordlayout(x, y, words, cex=wordsize))
-  text(wl$x + .5*wl$width, wl$y+ .5*wl$ht, words, 
-       cex=wordsize, col=color.scale(x,c(1,2,0),c(0,1,1),0))
+  text(wl$x + .5*wl$width, wl$y+ .5*wl$ht, words,  cex=wordsize, col=col)
 }
 
 
