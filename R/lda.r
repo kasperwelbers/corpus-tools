@@ -81,15 +81,16 @@ order.meta <- function(m, meta, match.by = 'id'){
 #' @param category_var A vector with id values of the same length and order of the documents (rows) in m$document_sums
 #' @param path The path for a folder where output will be saved
 #' @param date_interval The interval for plotting the values over time. Can be: 'day', 'week', 'month' or 'year'
+#' @param ... Additional options passed to lda.plot.topic (and on to lda.plot.wordcloud)
 #' @return Nothing
 #' @export
-lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day', value='relative', create_index=T){
+lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='day', value='relative', create_index=T, ...){
   if (!file.exists(path)) dir.create(path)
   for(topic_nr in 1:m@k){
     message('Plotting:', topic_nr)
     fn = file.path(path, paste(topic_nr, ".png", sep=""))
     if (!is.null(fn)) png(fn, width=1280,height=800)
-    lda.plot.topic(m, topic_nr, time_var, category_var, date_interval, value=value)
+    lda.plot.topic(m, topic_nr, time_var, category_var, date_interval, value=value, ...)
     if (!is.null(fn)) dev.off()
   }
   par(mfrow=c(1,1), mar=c(3,3,3,3))
@@ -113,13 +114,14 @@ lda.plot.alltopics <- function(m, time_var, category_var, path, date_interval='d
 #' @param date_interval The interval for plotting the values over time. Can be: 'day', 'week', 'month' or 'year'
 #' @param pct Show topic values as percentages
 #' @param value Show topic values as 'total', or as 'relative' to the attention for other topics
+#' @param ... Additional options passed to lda.plot.wordcloud
 #' @return Nothing, just plots
 #' @export
-lda.plot.topic <- function(m, topic_nr, time_var, category_var, date_interval='day', pct=F, value='relative'){
+lda.plot.topic <- function(m, topic_nr, time_var, category_var, date_interval='day', pct=F, value='relative', ...){
   par(mar=c(4.5,3,2,1), cex.axis=1.7)
   layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE), widths=c(3,1), heights=c(1,3))
   lda.plot.time(m, topic_nr, time_var, date_interval, pct=pct, value=value)
-  lda.plot.wordcloud(m, topic_nr)
+  lda.plot.wordcloud(m, topic_nr, ...)
   lda.plot.category(m, topic_nr, category_var, pct=pct, value=value)
   par(mfrow=c(1,1), mar=c(3,3,3,3))
 }
@@ -246,17 +248,19 @@ lda.plot.category <- function(m, topic_nr, category_var, pct=F, value='total', r
 #' 
 #' @param m The output of \code{\link{LDA}}
 #' @param topic_nr The index of the topic (1 to K)
+#' @param ... Additional options passed to dtm.wordcloud, e.g. freq.fun and pal
 #' @return Nothing, just plots
 #' @export
-lda.plot.wordcloud <- function(m, topic_nr){
-  x = posterior(m)$terms[topic_nr,]
-  x = sort(x, decreasing=T)[1:100]
+lda.plot.wordcloud  <- function (m, topic_nr, ...) 
+{
+  x = posterior(m)$terms[topic_nr, ]
+  x = sort(x, decreasing = T)[1:100]
   x = x[!is.na(x)]
   names = sub("/.*", "", names(x))
-  freqs = x
-  pal <- brewer.pal(6,"YlGnBu")
-  wordcloud(names, freqs, scale=c(5,.5), min.freq=1, max.words=Inf, random.order=FALSE, rot.per=.15, colors=pal)
+  
+  dtm.wordcloud(terms = names, freqs = x, ...)
 }
+
 
 #' Create an index file for plot.all.topics
 create.index <- function(m) {

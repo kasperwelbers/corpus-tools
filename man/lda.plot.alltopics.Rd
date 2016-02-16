@@ -5,7 +5,7 @@
 \title{Plot all topics}
 \usage{
 lda.plot.alltopics(m, time_var, category_var, path, date_interval = "day",
-  value = "relative", create_index = T)
+  value = "relative", create_index = T, ...)
 }
 \arguments{
 \item{m}{The output of \code{\link{collapsed.gibbs.sampler}}}
@@ -17,6 +17,8 @@ lda.plot.alltopics(m, time_var, category_var, path, date_interval = "day",
 \item{path}{The path for a folder where output will be saved}
 
 \item{date_interval}{The interval for plotting the values over time. Can be: 'day', 'week', 'month' or 'year'}
+
+\item{...}{Additional options passed to lda.plot.topic (and on to lda.plot.wordcloud)}
 }
 \value{
 Nothing

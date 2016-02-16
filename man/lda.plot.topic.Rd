@@ -5,7 +5,7 @@
 \title{Plots topic wordcloud, and attention over time and per category}
 \usage{
 lda.plot.topic(m, topic_nr, time_var, category_var, date_interval = "day",
-  pct = F, value = "relative")
+  pct = F, value = "relative", ...)
 }
 \arguments{
 \item{m}{The output of \code{\link{collapsed.gibbs.sampler}}}
@@ -19,6 +19,8 @@ lda.plot.topic(m, topic_nr, time_var, category_var, date_interval = "day",
 \item{pct}{Show topic values as percentages}
 
 \item{value}{Show topic values as 'total', or as 'relative' to the attention for other topics}
+
+\item{...}{Additional options passed to lda.plot.wordcloud}
 
 \item{The}{index of the topic (1 to K)}
 }

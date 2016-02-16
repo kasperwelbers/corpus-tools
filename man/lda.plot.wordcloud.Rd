@@ -4,12 +4,14 @@
 \alias{lda.plot.wordcloud}
 \title{Plot wordcloud for LDA topic}
 \usage{
-lda.plot.wordcloud(m, topic_nr)
+lda.plot.wordcloud(m, topic_nr, ...)
 }
 \arguments{
 \item{m}{The output of \code{\link{LDA}}}
 
 \item{topic_nr}{The index of the topic (1 to K)}
+
+\item{...}{Additional options passed to dtm.wordcloud, e.g. freq.fun and pal}
 }
 \value{
 Nothing, just plots
