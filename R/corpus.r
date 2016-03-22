@@ -173,18 +173,19 @@ term.time.statistics <- function(dtm, document_date, time_interval='day'){
 #' @param wordfreq The frequency of the words, defaulting to 1
 #' @return nothing
 #' @export
-plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', random.y=F, col = color.scale(x, c(1, 2, 0), c(0, 1, 1), 0), ...){
-  wordsize = rescale(log(wordfreq), c(0.75,2))
-  if(is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.01), length(x))
-  if(is.null(y) & !random.y) y = wordsize
+plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', random.y=F, xlim=NULL, ylim=NULL, col = color.scale(x, c(1, 2, 0), c(0, 1, 1), 0), ...){
+  wordsize = rescale(log(wordfreq), c(0.75, 2))
+  if (is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
+  if (is.null(y) & !random.y) y = wordsize
+  xmargin = (max(x) - min(x)) * 0.2
+  ymargin = (max(y) - min(y)) * 0.2
+  if (is.null(xlim)) xlim = c(min(x) - xmargin, max(x) + xmargin)
+  if (is.null(ylim)) ylim = c(min(y) - ymargin, max(y) + ymargin)
   
-  xmargin = (max(x) - min(x))*0.2
-  ymargin = (max(y) - min(y))*0.2
-  xlim = c(min(x) - xmargin, max(x) + xmargin)
-  ylim = c(min(y) - ymargin, max(y) + ymargin)
-  plot(x, y, type="n", xlim=xlim, ylim=ylim, frame.plot = F, yaxt = yaxt, ylab=ylab, xlab=xlab, ...)
-  wl <- as.data.frame(wordlayout(x, y, words, cex=wordsize))
-  text(wl$x + .5*wl$width, wl$y+ .5*wl$ht, words,  cex=wordsize, col=col)
+  plot(x, y, type = "n", xlim = xlim, ylim = ylim, frame.plot = F, yaxt = yaxt, ylab = ylab, xlab = xlab, ...)
+  wl <- as.data.frame(wordlayout(x, y, words, cex = wordsize))
+  
+  text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col = col)
 }
 
 
@@ -327,4 +328,15 @@ corpcomp.wordcloud <- function(compare_results, nterms=25, ...){
   compare_results = compare_results[order(-compare_results$chi),]
   compare_results = head(compare_results, nterms)
   dtm.wordcloud(terms=compare_results$term, freqs=compare_results$over, ...)
+}
+
+#' Convert a dtm into a "triples" data frame 
+#'
+#' @param dtm a document-term matrix
+#' @return a data frame with columns doc, term, and freq 
+#' @export
+dtm.to.df <- function(dtm) {
+  terms = factor(dtm$j, labels = colnames(dtm))
+  docs = factor(dtm$i, labels = rownames(dtm))
+  data.frame(doc=docs, term=terms, freq=dtm$v)
 }

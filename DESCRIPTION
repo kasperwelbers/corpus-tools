@@ -21,3 +21,4 @@ Description: Functions and tutorials for bag-of-word type text analysis
 License: MIT
 URL: http://github.com/kasperwelbers/corpus-tools
 Roxygen: list(wrap = FALSE)
+RoxygenNote: 5.0.1
