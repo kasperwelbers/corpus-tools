@@ -335,8 +335,8 @@ corpcomp.wordcloud <- function(compare_results, nterms=25, ...){
 #' @param dtm a document-term matrix
 #' @return a data frame with columns doc, term, and freq 
 #' @export
-dtm.to.df <- function(dtm) {
-  terms = factor(dtm$j, labels = colnames(dtm))
-  docs = factor(dtm$i, labels = rownames(dtm))
+dtm.to.df <- function(dtm, term_labels=colnames(dtm), doc_labels=rownames(dtm)) {
+  terms = factor(dtm$j, labels = term_labels)
+  docs = factor(dtm$i, labels = doc_labels)
   data.frame(doc=docs, term=terms, freq=dtm$v)
 }
