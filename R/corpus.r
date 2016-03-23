@@ -255,12 +255,17 @@ chi2 <- function(a,b,c,d) {
 #' @param smooth the smoothing parameter for computing overrepresentation
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
-corpora.compare <- function(dtm.x, dtm.y, smooth=.001, min.over=NULL, min.chi=NULL) {
+corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=.001, min.over=NULL, min.chi=NULL, select.rows=NULL) {
+  if (is.null(dtm.y)) {
+    dtm.y = dtm.x[!(rownames(dtm) %in% select.rows), ]
+    dtm.x = dtm.x[rownames(dtm) %in% select.rows, ]
+  }
   freqs = data.frame(term=colnames(dtm.x), termfreq=col_sums(dtm.x))
   freqs.rel = data.frame(term=colnames(dtm.y), termfreq=col_sums(dtm.y))
   f = merge(freqs, freqs.rel, all=T, by="term")    
   f[is.na(f)] = 0
   f = f[f$termfreq.x + f$termfreq.y > 0,]
+  f$termfreq = f$termfreq.x + f$termfreq.y
   f$relfreq.x = f$termfreq.x / sum(freqs$termfreq)
   f$relfreq.y = f$termfreq.y / sum(freqs.rel$termfreq)
   f$over = (f$relfreq.x + smooth) / (f$relfreq.y + smooth)
