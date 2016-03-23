@@ -52,8 +52,7 @@ dtm.create <- function (documents, terms, freqs = rep(1, length(documents)),
     warning("Removing ", sum(is.na(d$terms)), "rows with missing term names")
     d = d[!is.na(d$terms), ]
   }
-  sparsemat = cast.sparse.matrix(rows = d$ids, columns = d$terms, 
-                                 values = d$freqs)
+  sparsemat = cast.sparse.matrix(rows = d$ids, columns = d$terms,  values = d$freqs)
   as.DocumentTermMatrix(sparsemat, weighting = weightTf)
 }
 
@@ -173,8 +172,8 @@ term.time.statistics <- function(dtm, document_date, time_interval='day'){
 #' @param wordfreq The frequency of the words, defaulting to 1
 #' @return nothing
 #' @export
-plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', random.y=F, xlim=NULL, ylim=NULL, col = color.scale(x, c(1, 2, 0), c(0, 1, 1), 0), ...){
-  wordsize = rescale(log(wordfreq), c(0.75, 2))
+plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=F, xlim=NULL, ylim=NULL, col = color.scale(x, c(1, 2, 0), c(0, 1, 1), 0), ...){
+  wordsize = rescale(log(wordfreq), c(0.75, scale))
   if (is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
   if (is.null(y) & !random.y) y = wordsize
   xmargin = (max(x) - min(x)) * 0.2
