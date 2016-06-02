@@ -4,8 +4,8 @@
 \alias{corpora.compare}
 \title{Compare two corpora}
 \usage{
-corpora.compare(dtm.x, dtm.y, smooth = 0.001, min.over = NULL,
-  min.chi = NULL)
+corpora.compare(dtm.x, dtm.y = NULL, smooth = 0.001, min.over = NULL,
+  min.chi = NULL, select.rows = NULL)
 }
 \arguments{
 \item{dtm.x}{the main document-term matrix}

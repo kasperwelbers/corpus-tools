@@ -4,7 +4,7 @@
 \alias{dtm.to.df}
 \title{Convert a dtm into a "triples" data frame}
 \usage{
-dtm.to.df(dtm)
+dtm.to.df(dtm, term_labels = colnames(dtm), doc_labels = rownames(dtm))
 }
 \arguments{
 \item{dtm}{a document-term matrix}

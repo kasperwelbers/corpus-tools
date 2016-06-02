@@ -1,3 +1,4 @@
+
 ### PREPARE DATA
 
 #' Get word assignments from LDA_GIBBS class (output of lda.fit). This is similar to the documentsums object that comes as the output of lda.collapsed.gibbs.sampler
@@ -274,4 +275,29 @@ create.index <- function(m) {
   }
   html = c(html, "</div></body></html>")
   paste(html, collapse="\n")
+}
+
+
+#' Create JSON data for LDAvis
+#'
+#' @param m a fitted lda model
+#' @param dtm the dtm used to cerate the lda model
+#'
+#' @return a json string suitable for use with LDAvis::servis
+#' @export
+ldavis_json <- function(m, dtm){
+  
+  # Find required quantities
+  phi <- posterior(m)$terms %>% as.matrix
+  theta <- posterior(m)$topics %>% as.matrix
+  vocab <- colnames(phi)
+  
+  doc.length = row_sums(dtm)
+  term.freq = col_sums(dtm)[match(vocab, colnames(dtm))]
+  
+  createJSON(phi = phi, theta = theta,
+             vocab = vocab,
+             doc.length = doc.length,
+             term.frequency = term.freq)
+  
 }

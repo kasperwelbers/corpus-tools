@@ -274,10 +274,10 @@ corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=.001, min.over=NULL, min.c
   f
 }
 
-eachToAllComparison <- function(dtm, corpus_ids, ...){
+eachToAllComparison <- function(dtm, corpus_ids, .progress="text", ...){
   message('Comparing corpora (N=', length(corpus_ids),')')  
   compare_results = llply(names(corpus_ids), function(corpus_name) corpora.compare(dtm[corpus_ids[[corpus_name]],], 
-                                                                 dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress='text') 
+                                                                 dtm[unlist(corpus_ids[!names(corpus_ids)==corpus_name]),], ...), .progress=.progress) 
   names(compare_results) = names(corpus_ids)
   compare_results
 }
@@ -308,7 +308,7 @@ windowComparison <- function(dtm, corpus_ids, window, ...){
 #' @param ... additional arguments to be passed to the corpora.compare function
 #' @return a list or data.frame with the corpora.compare results for each dtm.  
 #' @export
-corpora.compare.list <- function(x, subcorpus=NULL, method='each_to_all', return.df=F, window.size=3, ...) {
+corpora.compare.list <- function(x, subcorpus=NULL, method='each_to_all', return.df=F, window.size=3, .progress="text", ...) {
   if('list' %in% class(x)) {
     subcorpus = rep(names(x), laply(x, nrow))
     x = Reduce(c, x)
@@ -316,7 +316,7 @@ corpora.compare.list <- function(x, subcorpus=NULL, method='each_to_all', return
   corpus_ids = llply(unique(subcorpus), function(subcorpus_value) which(subcorpus == subcorpus_value))
   names(corpus_ids) = unique(subcorpus)
   
-  if(method == 'each_to_all') results = eachToAllComparison(x, corpus_ids, ...)
+  if(method == 'each_to_all') results = eachToAllComparison(x, corpus_ids, .progress=.progress, ...)
   if(method == 'window') {
     window = -window.size:window.size
     window = window[!window == 0]
