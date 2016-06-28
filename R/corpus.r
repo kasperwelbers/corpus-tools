@@ -256,8 +256,8 @@ chi2 <- function(a,b,c,d) {
 #' @export
 corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=.001, min.over=NULL, min.chi=NULL, select.rows=NULL) {
   if (is.null(dtm.y)) {
-    dtm.y = dtm.x[!(rownames(dtm) %in% select.rows), ]
-    dtm.x = dtm.x[rownames(dtm) %in% select.rows, ]
+    dtm.y = dtm.x[!(rownames(dtm.x) %in% select.rows), ]
+    dtm.x = dtm.x[rownames(dtm.x) %in% select.rows, ]
   }
   freqs = data.frame(term=colnames(dtm.x), termfreq=col_sums(dtm.x))
   freqs.rel = data.frame(term=colnames(dtm.y), termfreq=col_sums(dtm.y))
