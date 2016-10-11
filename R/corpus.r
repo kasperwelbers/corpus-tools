@@ -231,18 +231,26 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 
 #' Compute the chi^2 statistic for a 2x2 crosstab containing the values
 #' [[a, b], [c, d]]
-chi2 <- function(a,b,c,d) {
-  ooe <- function(o, e) {(o-e)*(o-e) / e}
-  tot = 0.0 + a+b+c+d
-  a = as.numeric(a)
-  b = as.numeric(b)
-  c = as.numeric(c)
-  d = as.numeric(d)
-  (ooe(a, (a+c)*(a+b)/tot)
-   +  ooe(b, (b+d)*(a+b)/tot)
-   +  ooe(c, (a+c)*(c+d)/tot)
-   +  ooe(d, (d+b)*(c+d)/tot))
+chi2 <- function(a,b,c,d, yates_correction=rep(F, length(a)), autocorrect=T){
+  n = a+b+c+d
+  sums = cbind(c1 = a+c, c2 = b+d, r1 = a+b, r2 = c+d)
+  
+  if(autocorrect){
+    ## apply Cochrans criteria: no expected values below 1 and less than 20% of cells empty (which means none in a 2x2 design)
+    ## if these are violated, use the yates_correction
+    ## http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2041889/
+    e = cbind(sums[,'c1'] / n, sums[,'c2'] / n)
+    e = cbind(e * sums[,'r1'], e * sums[,'r2'])
+    c1 = rowSums(e < 1) > 0          # at least one expected value below 1
+    c2 = rowSums(sums < 5) > 0       # at least one cell below 5
+    yates_correction = ifelse(c1 | c2, T, F)
+  }
+  x = a*d - b*c
+  x = ifelse(yates_correction, abs(x) - n/2, x)
+  chi = n*x^2 / (sums[,'c1'] * sums[,'c2'] * sums[,'r1'] * sums[,'r2'])
+  ifelse(is.na(chi), 0, chi)
 }
+
 
 #' Compare two corpora
 #' 
@@ -254,7 +262,7 @@ chi2 <- function(a,b,c,d) {
 #' @param smooth the smoothing parameter for computing overrepresentation
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
-corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=.001, min.over=NULL, min.chi=NULL, select.rows=NULL) {
+corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=1, min.over=NULL, min.chi=NULL, select.rows=NULL) {
   if (is.null(dtm.y)) {
     dtm.y = dtm.x[!(rownames(dtm.x) %in% select.rows), ]
     dtm.x = dtm.x[rownames(dtm.x) %in% select.rows, ]
@@ -265,9 +273,9 @@ corpora.compare <- function(dtm.x, dtm.y=NULL, smooth=.001, min.over=NULL, min.c
   f[is.na(f)] = 0
   f = f[f$termfreq.x + f$termfreq.y > 0,]
   f$termfreq = f$termfreq.x + f$termfreq.y
-  f$relfreq.x = f$termfreq.x / sum(freqs$termfreq)
-  f$relfreq.y = f$termfreq.y / sum(freqs.rel$termfreq)
-  f$over = (f$relfreq.x + smooth) / (f$relfreq.y + smooth)
+  f$relfreq.x = (f$termfreq.x+smooth) / (sum(freqs$termfreq) + (nrow(freqs)*smooth))
+  f$relfreq.y = (f$termfreq.y+smooth) / (sum(freqs.rel$termfreq) + (nrow(freqs.rel)*smooth))
+  f$over = (f$relfreq.x) / (f$relfreq.y)
   f$chi = chi2(f$termfreq.x, f$termfreq.y, sum(f$termfreq.x) - f$termfreq.x, sum(f$termfreq.y) - f$termfreq.y)
   if(!is.null(min.over)) f = f[f$over > min.over,]
   if(!is.null(min.chi)) f = f[f$chi > min.chi,]
