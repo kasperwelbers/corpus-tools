@@ -286,6 +286,8 @@ create.index <- function(m) {
 #' @return a json string suitable for use with LDAvis::servis
 #' @export
 ldavis_json <- function(m, dtm){
+
+  dtm = dtm[row_sums(dtm) > 0, ]
   
   # Find required quantities
   phi <- posterior(m)$terms %>% as.matrix
