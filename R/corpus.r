@@ -353,3 +353,13 @@ dtm.to.df <- function(dtm) {
   docs = factor(dtm$i, labels = rownames(dtm))
   data.frame(doc=docs, term=terms, freq=dtm$v)
 }
+
+#' Convert a dtm into a quanteda dfm object (requires quanteda to be available)
+#' 
+#' @param dtm a document-term matrix
+#' @return a quanteda document-feature matrix
+#' @export 
+dtm.to.dfm <- function(dtm) {
+  if (!require("quanteda")) stop("Quanteda needs to be loaded before creating a dtm")
+  new("dfmSparse", Matrix(dtm, ncol = ncol(dtm), sparse=T, dimnames=dimnames(dtm)))
+}
