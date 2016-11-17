@@ -53,7 +53,9 @@ dtm.create <- function (documents, terms, freqs = rep(1, length(documents)),
     d = d[!is.na(d$terms), ]
   }
   sparsemat = cast.sparse.matrix(rows = d$ids, columns = d$terms,  values = d$freqs)
-  as.DocumentTermMatrix(sparsemat, weighting = weightTf)
+  sparsemat = as(sparsemat, "")
+  class(sparsemat)
+  tm::as.DocumentTermMatrix(sparsemat, weighting = weightTf)
 }
 
 #' Filter a dtm by selecting documents or terms
