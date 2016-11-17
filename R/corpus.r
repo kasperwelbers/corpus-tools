@@ -53,8 +53,6 @@ dtm.create <- function (documents, terms, freqs = rep(1, length(documents)),
     d = d[!is.na(d$terms), ]
   }
   sparsemat = cast.sparse.matrix(rows = d$ids, columns = d$terms,  values = d$freqs)
-  sparsemat = as(sparsemat, "")
-  class(sparsemat)
   tm::as.DocumentTermMatrix(sparsemat, weighting = weightTf)
 }
 
